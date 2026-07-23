@@ -4,7 +4,7 @@ I created an Android app to keep track of your ranked stats all along the season
 Everything runs 100% offline: your data stays on your phone, no account needed, no ads, no tracking. The app is bilingual (French / English). This is an unofficial tool and is not affiliated with or endorsed by Embark Studios in any way. 
 
 
-Features ->
+# Features ->
 
 - Bilingual (French / English)
 - Rank Tracking — Log your Rank Score after every match and watch your progression over time.
