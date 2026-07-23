@@ -5,7 +5,6 @@ Everything runs 100% offline: your data stays on your phone, no account needed, 
 
 
 # Features
-
 - Bilingual (French / English)
 - Rank Tracking — Log your Rank Score after every match and watch your progression over time.
 - Interactive Candlestick Chart — Visualize your gains and losses with an interactive, zoomable chart.
