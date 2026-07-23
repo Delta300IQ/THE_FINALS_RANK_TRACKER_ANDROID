@@ -1,4 +1,4 @@
-# THE_FINALS_RANK_TRACKER_ANDROID
+# THE FINALS rank tracker for Android 
 I created an Android app to keep track of your ranked stats all along the seasons in THE FINALS. That's my first app so it's far from being perfect but it works. Also I don't pretend to be a developer, actual dev would cry over my code, I used AI to create it because I barely knows anything in coding, hope you will understand and not hate on me. I used the following AI : Gemini, Chatgpt, Claude, Kimi K3, Z AI and Google AI studio.
 
 Everything runs 100% offline: your data stays on your phone, no account needed, no ads, no tracking. The app is bilingual (French / English). This is an unofficial tool and is not affiliated with or endorsed by Embark Studios in any way. 
