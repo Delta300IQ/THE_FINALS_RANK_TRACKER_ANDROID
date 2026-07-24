@@ -19,10 +19,11 @@ Everything runs 100% offline: your data stays on your phone, no account needed, 
 
 Keep in mind that this is a personal project, but feedback and suggestions are always welcome! Feel free to open an issue or reach out.
 Made with ❤️ by Delta300IQ, see you in the arena !
- 
+
+
 Discord:  delta8771 
 
-<img width="260" height="600" alt="Screenshot_2026-07-23-22-08-05-196_com example finalsranktracker" src="https://github.com/user-attachments/assets/aea7b0a5-8147-4b87-b26e-b963e0a475d0" />
+<img width="260" height="600" alt="Screenshot_2026-07-24-16-36-50-324_com example finalsranktracker" src="https://github.com/user-attachments/assets/782811e6-e14b-4169-8443-82e4197d823e" />
 <img width="260" height="600" alt="Screenshot_2026-07-23-22-08-24-879_com example finalsranktracker" src="https://github.com/user-attachments/assets/9ba982eb-ec76-419b-83f7-b54d0b545bd6" />
 <img width="260" height="600" alt="Screenshot_2026-07-23-22-10-40-571_com example finalsranktracker" src="https://github.com/user-attachments/assets/8d85335b-df1d-437e-8a0e-6424241f37d3" />
 <img width="260" height="600" alt="Screenshot_2026-07-23-22-11-41-738_com example finalsranktracker" src="https://github.com/user-attachments/assets/4c2cde58-7876-45ac-a7b2-125738168891" />
