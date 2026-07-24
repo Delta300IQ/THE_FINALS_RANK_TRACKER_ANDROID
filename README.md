@@ -1,7 +1,3 @@
-<img width="1080" height="2400" alt="Screenshot_2026-07-23-22-11-41-738_com example finalsranktracker" src="https://github.com/user-attachments/assets/4c2cde58-7876-45ac-a7b2-125738168891" />
-<img width="1080" height="2400" alt="Screenshot_2026-07-23-22-10-40-571_com example finalsranktracker" src="https://github.com/user-attachments/assets/8d85335b-df1d-437e-8a0e-6424241f37d3" />
-<img width="1080" height="2400" alt="Screenshot_2026-07-23-22-08-24-879_com example finalsranktracker" src="https://github.com/user-attachments/assets/9ba982eb-ec76-419b-83f7-b54d0b545bd6" />
-<img width="1080" height="2400" alt="Screenshot_2026-07-23-22-08-05-196_com example finalsranktracker" src="https://github.com/user-attachments/assets/aea7b0a5-8147-4b87-b26e-b963e0a475d0" />
 # THE FINALS rank tracker for Android 
 I created an Android app to keep track of your ranked stats all along the seasons in THE FINALS. That's my first app so it's far from being perfect but it works. Also I don't pretend to be a developer, actual dev would cry over my code, I used AI to create it because I barely knows anything in coding, hope you will understand and not hate on me. I used the following AI : Gemini, Chatgpt, Claude, Kimi K3, Z AI and Google AI studio.
 
@@ -25,3 +21,8 @@ Keep in mind that this is a personal project, but feedback and suggestions are a
 Made with ❤️ by Delta300IQ, see you in the arena !
  
 Discord:  delta8771 
+
+<img width="260" height="2400" alt="Screenshot_2026-07-23-22-11-41-738_com example finalsranktracker" src="https://github.com/user-attachments/assets/4c2cde58-7876-45ac-a7b2-125738168891" />
+<img width="260" height="2400" alt="Screenshot_2026-07-23-22-10-40-571_com example finalsranktracker" src="https://github.com/user-attachments/assets/8d85335b-df1d-437e-8a0e-6424241f37d3" />
+<img width="260" height="2400" alt="Screenshot_2026-07-23-22-08-24-879_com example finalsranktracker" src="https://github.com/user-attachments/assets/9ba982eb-ec76-419b-83f7-b54d0b545bd6" />
+<img width="260" height="2400" alt="Screenshot_2026-07-23-22-08-05-196_com example finalsranktracker" src="https://github.com/user-attachments/assets/aea7b0a5-8147-4b87-b26e-b963e0a475d0" />
