@@ -12,8 +12,8 @@ android {
         applicationId = "com.example.finalsranktracker"
         minSdk = 24
         targetSdk = 35
-        versionCode = 53
-        versionName = "1.53.0"
+        versionCode = 54
+        versionName = "1.54.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

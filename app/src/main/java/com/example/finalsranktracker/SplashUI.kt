@@ -70,14 +70,13 @@ internal fun SplashUI(
         )
         val animNameAlpha by animateFloatAsState(targetValue = nameAlpha, animationSpec = tween(400), label = "nalpha")
 
-        // Animation de la barre de progression calée EXACTEMENT sur 3000 ms
+        // Animation de la barre de progression calée EXACTEMENT sur 3000 ms = 3 secondes (durée de Splash screen)
         val progressAnim by animateFloatAsState(
             targetValue = progressTarget,
-            animationSpec = tween(durationMillis = 3000, easing = FastOutSlowInEasing),
+            animationSpec = tween(durationMillis = 3000, easing = LinearOutSlowInEasing),
             label = "Progress"
         )
 
-        // Compteur "Slot Machine" pour le Rang
         var isRolling by remember { mutableStateOf(true) }
         var rollValue by remember { mutableStateOf(0) }
         var targetRank by remember { mutableStateOf(0) }
@@ -88,7 +87,6 @@ internal fun SplashUI(
         )
 
         LaunchedEffect(Unit) {
-            // Lancement des paliers
             finalsAlpha = 1f
             finalsScale = 1f
             progressTarget = 1f // Déclenche le remplissage lent sur 3s
@@ -99,7 +97,7 @@ internal fun SplashUI(
 
             delay(300)
             logoScale = 1.0f
-            logoOffsetY = 0.dp // Pop & chute élastique
+            logoOffsetY = 0.dp
 
             delay(300)
             nameAlpha = 1f
@@ -120,7 +118,7 @@ internal fun SplashUI(
             }
         }
 
-        // Fermeture automatique après 3 secondes nettes
+        // Fermeture automatique à 3 secondes
         LaunchedEffect(Unit) {
             delay(3000)
             onDismiss()
@@ -135,7 +133,6 @@ internal fun SplashUI(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            // Titre géant
             Text(
                 text = "THE FINALS",
                 color = palette.accent,
@@ -153,7 +150,6 @@ internal fun SplashUI(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Compteur Slot Machine
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -174,7 +170,6 @@ internal fun SplashUI(
             if (currentRank != null) {
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Logo Rebondissant
                 Box(
                     modifier = Modifier
                         .scale(animLogoScale)
@@ -189,7 +184,6 @@ internal fun SplashUI(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Nom du rang
                 Text(
                     text = getLocalizedRankName(rankNameFor(currentRank), isEnglish),
                     color = palette.cyan,
@@ -201,7 +195,7 @@ internal fun SplashUI(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Barre de chargement The Finals
+            // Barre de chargement
             Box(
                 modifier = Modifier
                     .width(200.dp)

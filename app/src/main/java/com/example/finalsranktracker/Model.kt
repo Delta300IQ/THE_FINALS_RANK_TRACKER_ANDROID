@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -65,7 +66,8 @@ internal data class Strings(
     val filterAll: String, val noMatchForFilter: String, val rankGoalAlreadyMax: String, val previousSeasonDesc: String,
     val nextSeasonDesc: String, val closeDesc: String, val editDesc: String, val removeDesc: String, val compareSeasonsLabel: String,
     val compareSeasonsPrompt: String, val compareSeasonsNoOthers: String, val performanceByTimeTitle: String,
-    val dayOfWeekLabel: String, val timeOfDayLabel: String, val exportReminderMessage: String, val exportReminderDismiss: String
+    val dayOfWeekLabel: String, val timeOfDayLabel: String, val exportReminderMessage: String, val exportReminderDismiss: String,
+    val addTagTitle: String, val addTagPlaceholder: String, val addWord: String
 )
 
 internal val FR = Strings(
@@ -103,7 +105,8 @@ internal val FR = Strings(
     removeDesc = "Supprimer", compareSeasonsLabel = "Comparer", compareSeasonsPrompt = "Saison à comparer :",
     compareSeasonsNoOthers = "Aucune autre donnée.", performanceByTimeTitle = "Performance par créneau",
     dayOfWeekLabel = "Par jour de la semaine", timeOfDayLabel = "Par moment de la journée",
-    exportReminderMessage = "Pensez à sauvegarder vos données !", exportReminderDismiss = "Plus tard"
+    exportReminderMessage = "Pensez à sauvegarder vos données !", exportReminderDismiss = "Plus tard",
+    addTagTitle = "Nouveau tag", addTagPlaceholder = "Nom du tag", addWord = "Ajouter"
 )
 
 internal val EN = Strings(
@@ -141,7 +144,8 @@ internal val EN = Strings(
     removeDesc = "Remove", compareSeasonsLabel = "Compare", compareSeasonsPrompt = "Season to compare:",
     compareSeasonsNoOthers = "No other data.", performanceByTimeTitle = "Performance by time slot",
     dayOfWeekLabel = "By day of week", timeOfDayLabel = "By time of day",
-    exportReminderMessage = "Remember to back up your data!", exportReminderDismiss = "Later"
+    exportReminderMessage = "Remember to back up your data!", exportReminderDismiss = "Later",
+    addTagTitle = "New tag", addTagPlaceholder = "Tag name", addWord = "Add"
 )
 
 // ---------- Modèle de données ----------
@@ -277,19 +281,19 @@ internal fun longestStreak(deltas: List<Int>, predicate: (Int) -> Boolean): Int 
     return max
 }
 
-// Difficulté non-linéaire (pénalise fortement les rangs élevés)
 internal fun getRankDifficultyMultiplier(rank: Int): Double {
     return when {
-        rank >= 50000 -> 0.25 // Ruby
-        rank >= 47500 -> 0.40 // Diamond 1
-        rank >= 45000 -> 0.50 // Diamond 2
-        rank >= 42500 -> 0.60 // Diamond 3
-        rank >= 40000 -> 0.70 // Diamond 4
-        rank >= 37500 -> 0.80 // Plat 1
-        rank >= 35000 -> 0.85 // Plat 2
-        rank >= 32500 -> 0.90 // Plat 3
-        rank >= 30000 -> 0.95 // Plat 4
-        else -> 1.20 // Gold/Silver/Bronze
+        rank >= 50000 -> 0.15 // Ruby is brutally hard
+        rank >= 47500 -> 0.30 // Diamond 1
+        rank >= 45000 -> 0.40 // Diamond 2
+        rank >= 42500 -> 0.50 // Diamond 3
+        rank >= 40000 -> 0.60 // Diamond 4
+        rank >= 37500 -> 0.70 // Plat 1
+        rank >= 35000 -> 0.75 // Plat 2
+        rank >= 32500 -> 0.80 // Plat 3
+        rank >= 30000 -> 0.90 // Plat 4
+        rank >= 20000 -> 1.00 // Gold
+        else -> 1.20 // Silver/Bronze
     }
 }
 
@@ -309,11 +313,9 @@ internal fun estimateProgressRate(entries: List<RankEntry>, maxWindow: Int = 10)
     return if (den != 0.0) num / den else null
 }
 
-// Nouveau Calcul de prédiction d'objectif ultra-fiable et progressif
 internal fun estimateMatchesToGoal(entries: List<RankEntry>, currentRank: Int, goalValue: Int): Int? {
     if (entries.size < 2) return null
 
-    // On analyse les 20 derniers matchs pour se baser sur le "vrai" niveau actuel du joueur
     val recentEntries = entries.takeLast(20)
     if (recentEntries.size < 2) return null
 
@@ -326,30 +328,22 @@ internal fun estimateMatchesToGoal(entries: List<RankEntry>, currentRank: Int, g
     val avgGain = gains.average()
     val avgLoss = if (losses.isNotEmpty()) losses.average() else 0.0
 
-    // Ratio de victoire brut récent
     val realWinRate = gains.size.toDouble() / deltas.size
-
-    // Boost optimiste (+4% winrate) pour rester motivant !
     val optimisticWinRate = minOf(0.95, realWinRate + 0.04)
     val lossRate = 1.0 - optimisticWinRate
 
-    // Tendance/Dynamique récente (Momentum) sur les 10 derniers matchs
     val momentum = estimateProgressRate(recentEntries, 10) ?: 0.0
 
-    // Calcul de l'espérance de points moyens gagnés par match (au rang actuel)
     var expectedRsAtCurrentRank = (optimisticWinRate * avgGain) + (lossRate * avgLoss)
 
-    // Si dynamique positive, on la mixe pour booster l'estimation
     if (momentum > 0) {
         expectedRsAtCurrentRank = (expectedRsAtCurrentRank * 0.6) + (momentum * 0.4)
     }
 
-    // Minimum vital optimiste si l'espérance est trop faible
     if (expectedRsAtCurrentRank <= 1.0) {
         expectedRsAtCurrentRank = maxOf(avgGain * 0.15, 8.0)
     }
 
-    // On annule le malus du rang actuel pour obtenir la "force de frappe brute" du joueur
     val currentMultiplier = getRankDifficultyMultiplier(currentRank)
     val baseRawExpectedRs = expectedRsAtCurrentRank / currentMultiplier
 
@@ -357,12 +351,11 @@ internal fun estimateMatchesToGoal(entries: List<RankEntry>, currentRank: Int, g
     var matches = 0
     val safeMaxMatches = 3000
 
-    // Boucle de simulation match par match (la progression ralentit naturellement à l'approche du but)
     while (currentSimulatedRank < goalValue && matches < safeMaxMatches) {
         val multiplier = getRankDifficultyMultiplier(currentSimulatedRank.toInt())
         val gainForThisMatch = baseRawExpectedRs * multiplier
 
-        if (gainForThisMatch <= 0.1) return null // Cas extrême : impossible de monter
+        if (gainForThisMatch <= 0.1) return null
 
         currentSimulatedRank += gainForThisMatch
         matches++
@@ -439,79 +432,115 @@ internal fun getProgressForPeriod(entries: List<RankEntry>, startMs: Long): Int?
     return pe.last().rank - start
 }
 
-// ---------- Stockage local (SharedPreferences) ----------
+// ---------- Stockage local et Backup Atomique ----------
 internal const val PREFS_NAME = "finals_rank_tracker"
 internal const val KEY_SEASONS = "seasons_json_v2"
+internal const val KEY_SEASONS_BACKUP = "seasons_json_backup"
 internal const val KEY_ENTRIES_LEGACY = "entries_json"
 internal const val KEY_DARK_MODE = "dark_mode"
 internal const val KEY_LANGUAGE = "is_english"
 internal const val KEY_SELECTED_SEASON = "selected_season"
 internal const val KEY_RANK_GOALS = "rank_goals_v1"
+internal const val KEY_CUSTOM_TAGS = "custom_tags"
 internal const val KEY_LAST_EXPORT_TIMESTAMP = "last_export_timestamp"
 internal const val KEY_EXPORT_REMINDER_DISMISS_TIMESTAMP = "export_reminder_dismiss_timestamp"
 internal const val EXPORT_REMINDER_INTERVAL_MS = 14L * 24 * 3600 * 1000
 
-internal fun loadAllSeasons(context: Context): Map<Int, List<RankEntry>> {
+internal fun loadCustomTags(context: Context): List<String> {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    val json = prefs.getString(KEY_SEASONS, null)
-    if (json != null) {
-        return try {
-            val obj = JSONObject(json)
-            val res = mutableMapOf<Int, List<RankEntry>>()
-            val keys = obj.keys()
-            while (keys.hasNext()) {
-                val k = keys.next()
-                val s = k.toIntOrNull()
-                if (s != null) {
-                    val arr = obj.getJSONArray(k)
-                    val list = (0 until arr.length()).map { i ->
-                        val item = arr.getJSONObject(i)
-                        val notes = if (item.has("notes")) {
-                            val notesArr = item.getJSONArray("notes")
-                            (0 until notesArr.length()).map { notesArr.getString(it) }
-                        } else {
-                            emptyList()
-                        }
-                        RankEntry(rank = item.getInt("rank"), timestamp = item.getLong("ts"), notes = notes)
-                    }
-                    res[s] = list
-                }
-            }
-            res
-        } catch (e: Exception) { emptyMap() }
+    val json = prefs.getString(KEY_CUSTOM_TAGS, "[]")
+    return try {
+        val arr = JSONArray(json)
+        (0 until arr.length()).map { arr.getString(it) }
+    } catch (e: Exception) { emptyList() }
+}
+
+internal fun saveCustomTags(context: Context, tags: List<String>) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    val arr = JSONArray()
+    tags.forEach { arr.put(it) }
+    prefs.edit().putString(KEY_CUSTOM_TAGS, arr.toString()).apply()
+}
+
+internal fun loadAllSeasons(context: Context): Map<Int, List<RankEntry>> {
+    val mainFile = File(context.filesDir, "rank_data.json")
+    if (mainFile.exists()) {
+        try {
+            val parsed = parseAllSeasonsJson(mainFile.readText())
+            if (parsed != null) return parsed
+        } catch (e: Exception) {}
+    }
+
+    val backupFile = File(context.filesDir, "rank_data_backup.json")
+    if (backupFile.exists()) {
+        try {
+            val parsed = parseAllSeasonsJson(backupFile.readText())
+            if (parsed != null) return parsed
+        } catch (e: Exception) {}
+    }
+
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    val prefsBackup = prefs.getString(KEY_SEASONS_BACKUP, null)
+    if (prefsBackup != null) {
+        val parsed = parseAllSeasonsJson(prefsBackup)
+        if (parsed != null) return parsed
+    }
+
+    val prefsLegacy = prefs.getString(KEY_SEASONS, null)
+    if (prefsLegacy != null) {
+        val parsed = parseAllSeasonsJson(prefsLegacy)
+        if (parsed != null) {
+            saveAllSeasons(context, parsed) // Migration automatique
+            return parsed
+        }
     }
 
     val oldJson = prefs.getString(KEY_ENTRIES_LEGACY, null)
     if (oldJson != null) {
-        return try {
+        try {
             val arr = JSONArray(oldJson)
             val now = System.currentTimeMillis()
             val migrated = (0 until arr.length()).map { RankEntry(arr.getInt(it), now, emptyList()) }
             val map = mapOf(11 to migrated)
             saveAllSeasons(context, map)
-            map
-        } catch (e: Exception) { emptyMap() }
+            return map
+        } catch (e: Exception) {}
     }
     return emptyMap()
 }
 
 internal fun saveAllSeasons(context: Context, seasons: Map<Int, List<RankEntry>>) {
+    val jsonStr = buildAllSeasonsJson(seasons)
+
+    // Validation JSON avant écriture
+    if (parseAllSeasonsJson(jsonStr) == null) return
+
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    val obj = JSONObject()
-    seasons.forEach { (s, list) ->
-        val arr = JSONArray()
-        list.forEach { e ->
-            val item = JSONObject()
-            item.put("rank", e.rank)
-            item.put("ts", e.timestamp)
-            val na = JSONArray()
-            e.notes.forEach { na.put(it) }
-            item.put("notes", na)
-            arr.put(item)
-        }
-        obj.put(s.toString(), arr)
+    val mainFile = File(context.filesDir, "rank_data.json")
+    val backupFile = File(context.filesDir, "rank_data_backup.json")
+    val tempFile = File(context.filesDir, "rank_data_temp.json")
+
+    // Backup
+    val currentContent = if (mainFile.exists()) {
+        try { mainFile.readText() } catch (e: Exception) { null }
+    } else {
+        prefs.getString(KEY_SEASONS, null)
     }
-    prefs.edit().putString(KEY_SEASONS, obj.toString()).apply()
+
+    if (currentContent != null) {
+        prefs.edit().putString(KEY_SEASONS_BACKUP, currentContent).apply()
+        try { backupFile.writeText(currentContent) } catch (e: Exception) {}
+    }
+
+    // Écriture atomique
+    try {
+        tempFile.writeText(jsonStr)
+        if (tempFile.exists()) {
+            tempFile.renameTo(mainFile)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
 }
 
 internal fun loadDarkMode(context: Context) = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean(KEY_DARK_MODE, true)
@@ -524,21 +553,13 @@ internal fun saveSelectedSeason(context: Context, s: Int) = context.getSharedPre
 internal fun loadRankGoals(context: Context): Map<Int, Int> {
     val json = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(KEY_RANK_GOALS, null) ?: return emptyMap()
     return try {
-        val obj = JSONObject(json)
-        val res = mutableMapOf<Int, Int>()
-        val keys = obj.keys()
-        while (keys.hasNext()) {
-            val k = keys.next()
-            val s = k.toIntOrNull()
-            if (s != null) res[s] = obj.getInt(k)
-        }
-        res
+        val obj = JSONObject(json); val res = mutableMapOf<Int, Int>(); val keys = obj.keys()
+        while (keys.hasNext()) { val k = keys.next(); val s = k.toIntOrNull(); if (s != null) res[s] = obj.getInt(k) }; res
     } catch (e: Exception) { emptyMap() }
 }
 
 internal fun saveRankGoals(context: Context, goals: Map<Int, Int>) {
-    val obj = JSONObject()
-    goals.forEach { (s, g) -> obj.put(s.toString(), g) }
+    val obj = JSONObject(); goals.forEach { (s, g) -> obj.put(s.toString(), g) }
     context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putString(KEY_RANK_GOALS, obj.toString()).apply()
 }
 
