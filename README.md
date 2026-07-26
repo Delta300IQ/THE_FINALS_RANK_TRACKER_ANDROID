@@ -13,7 +13,7 @@ Everything runs 100% offline: your data stays on your phone, no account needed, 
 - Goal Setter — Define a target rank and get an estimate of how many matches remain based on your current pace.
 - Season Comparison — Compare your performance across different seasons side-by-side.
 - Performance by Time — Discover whether you play better at night, in the morning, or on specific days of the week.  
-- Import / Export — Backup and restore your data via JSON file or clipboard (share your stats with friends).
+- Import / Export — Backup and restore your data via JSON file or clipboard.
 - Dark & Light Themes — Choose the mode that fits your style.
 
 
