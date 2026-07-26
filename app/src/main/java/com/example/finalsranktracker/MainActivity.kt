@@ -11,6 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -151,6 +152,7 @@ fun RankTrackerApp() {
 
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var editingIndex by remember { mutableStateOf<Int?>(null) }
+    var chartEditingIndex by remember { mutableStateOf<Int?>(null) }
     var editValue by remember { mutableStateOf("") }
     var editNotes by remember { mutableStateOf(setOf<String>()) }
     var editInvalidScore by remember { mutableStateOf(false) }
@@ -182,6 +184,7 @@ fun RankTrackerApp() {
 
     var selectedNotes by remember { mutableStateOf(setOf<String>()) }
     var customTags by remember { mutableStateOf(loadCustomTags(context)) }
+    var tagToDelete by remember { mutableStateOf<String?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
     val saveButtonScale = remember { Animatable(1f) }
@@ -287,7 +290,7 @@ fun RankTrackerApp() {
     fun resetSelections() {
         selectedIndex = null; editingIndex = null; editNotes = emptySet(); editInvalidScore = false
         deleteConfirmIndex = null; expandedHistoryIndex = null; showResetConfirm = false; showUndoConfirm = false
-        showGoalSelector = false; historyNoteFilter = emptySet()
+        showGoalSelector = false; historyNoteFilter = emptySet(); chartEditingIndex = null; tagToDelete = null
     }
 
     fun persistSeason(next: List<RankEntry>) {
@@ -439,11 +442,8 @@ fun RankTrackerApp() {
                     ) {
 
                         HeaderSection(
-                            eyebrow = s.eyebrow,
-                            title = s.title,
-                            isDarkMode = isDarkMode,
-                            darkModeLabel = s.darkModeLabel,
-                            lightModeLabel = s.lightModeLabel,
+                            eyebrow = s.eyebrow, title = s.title, isDarkMode = isDarkMode,
+                            darkModeLabel = s.darkModeLabel, lightModeLabel = s.lightModeLabel,
                             palette = palette,
                             onToggleDarkMode = {
                                 isDarkMode = !isDarkMode
@@ -461,18 +461,10 @@ fun RankTrackerApp() {
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = s.exportReminderMessage,
-                                    color = palette.textPrimary,
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                Text(text = s.exportReminderMessage, color = palette.textPrimary, fontSize = 12.sp, modifier = Modifier.weight(1f))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = s.exportReminderDismiss,
-                                    color = palette.cyan,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    text = s.exportReminderDismiss, color = palette.cyan, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.clickable {
                                         saveExportReminderDismissTimestamp(context, System.currentTimeMillis())
                                         showExportReminder = false
@@ -484,10 +476,7 @@ fun RankTrackerApp() {
                         Spacer(modifier = Modifier.height(10.dp))
 
                         SeasonLanguageSelector(
-                            selectedSeason = selectedSeason,
-                            isEnglish = isEnglish,
-                            seasonLabel = s.season,
-                            palette = palette,
+                            selectedSeason = selectedSeason, isEnglish = isEnglish, seasonLabel = s.season, palette = palette,
                             onPreviousSeason = {
                                 if (selectedSeason > 1) {
                                     selectedSeason -= 1
@@ -510,38 +499,19 @@ fun RankTrackerApp() {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         CurrentRankCard(
-                            currentRank = currentRank,
-                            animatedRankScore = animatedRankScore,
-                            animatedRankBrush = animatedRankBrush,
-                            delta = delta,
-                            deltaScale = deltaScale,
-                            winRate = winRate,
-                            winStreak = winStreak,
-                            streakFlameScale = streakFlameScale.value,
-                            flameFlicker = flameFlicker,
-                            flameGlowAlpha = flameGlowAlpha,
-                            streakColor = streakColor,
-                            rsRemaining = s.rsRemaining,
-                            nextRankPrefix = s.nextRankPrefix,
-                            rubyMax = s.rubyMax,
-                            isEnglish = isEnglish,
-                            isDarkMode = isDarkMode,
-                            palette = palette,
-                            s = s
+                            currentRank = currentRank, animatedRankScore = animatedRankScore, animatedRankBrush = animatedRankBrush,
+                            delta = delta, deltaScale = deltaScale, winRate = winRate, winStreak = winStreak,
+                            streakFlameScale = streakFlameScale.value, flameFlicker = flameFlicker, flameGlowAlpha = flameGlowAlpha,
+                            streakColor = streakColor, rsRemaining = s.rsRemaining, nextRankPrefix = s.nextRankPrefix, rubyMax = s.rubyMax,
+                            isEnglish = isEnglish, isDarkMode = isDarkMode, palette = palette, s = s
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         RankGoalCard(
-                            currentRank = currentRank,
-                            selectedSeason = selectedSeason,
-                            goalValue = goalValue,
-                            showGoalSelector = showGoalSelector,
-                            estimatedMatchesToGoal = estimatedMatchesToGoal,
-                            isEnglish = isEnglish,
-                            palette = palette,
-                            isDarkMode = isDarkMode,
-                            s = s,
+                            currentRank = currentRank, selectedSeason = selectedSeason, goalValue = goalValue,
+                            showGoalSelector = showGoalSelector, estimatedMatchesToGoal = estimatedMatchesToGoal,
+                            isEnglish = isEnglish, palette = palette, isDarkMode = isDarkMode, s = s,
                             onToggleSelector = { showGoalSelector = !showGoalSelector },
                             onSelectGoal = { threshold ->
                                 val updated = rankGoals.toMutableMap()
@@ -561,27 +531,12 @@ fun RankTrackerApp() {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         StatsSection(
-                            currentSeasonEntries = currentSeasonEntries,
-                            peakRank = peakRank,
-                            peakRankName = peakRankName,
-                            lowRank = lowRank,
-                            lowRankName = lowRankName,
-                            avgChange = avgChange,
-                            avgGain = avgGain,
-                            avgLoss = avgLoss,
-                            biggestGain = biggestGain,
-                            biggestDrop = biggestDrop,
-                            bestWinStreak = bestWinStreak,
-                            bestLoseStreak = bestLoseStreak,
-                            showStats = showStats,
-                            compareSeasonsEnabled = compareSeasonsEnabled,
-                            compareSeasonId = compareSeasonId,
-                            allSeasons = allSeasons,
-                            selectedSeason = selectedSeason,
-                            isEnglish = isEnglish,
-                            isDarkMode = isDarkMode,
-                            palette = palette,
-                            s = s,
+                            currentSeasonEntries = currentSeasonEntries, peakRank = peakRank, peakRankName = peakRankName,
+                            lowRank = lowRank, lowRankName = lowRankName, avgChange = avgChange, avgGain = avgGain, avgLoss = avgLoss,
+                            biggestGain = biggestGain, biggestDrop = biggestDrop, bestWinStreak = bestWinStreak, bestLoseStreak = bestLoseStreak,
+                            showStats = showStats, compareSeasonsEnabled = compareSeasonsEnabled, compareSeasonId = compareSeasonId,
+                            allSeasons = allSeasons, selectedSeason = selectedSeason, isEnglish = isEnglish, isDarkMode = isDarkMode,
+                            palette = palette, s = s,
                             onToggleStats = { showStats = !showStats },
                             onToggleCompare = {
                                 compareSeasonsEnabled = !compareSeasonsEnabled
@@ -593,74 +548,44 @@ fun RankTrackerApp() {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         CandlestickChartSection(
-                            chartPoints = chartPoints,
-                            chartPeriod = chartPeriod,
-                            zoomScale = zoomScale,
-                            selectedIndex = selectedIndex,
-                            currentSeasonEntries = currentSeasonEntries,
-                            lowRank = lowRank,
-                            peakRank = peakRank,
-                            isEnglish = isEnglish,
-                            isDarkMode = isDarkMode,
-                            palette = palette,
-                            s = s,
+                            chartPoints = chartPoints, chartPeriod = chartPeriod, zoomScale = zoomScale,
+                            selectedIndex = selectedIndex, currentSeasonEntries = currentSeasonEntries,
+                            lowRank = lowRank, peakRank = peakRank, isEnglish = isEnglish, isDarkMode = isDarkMode,
+                            palette = palette, s = s,
                             onSelectPeriod = { period ->
                                 chartPeriod = period
                                 selectedIndex = null
                             },
                             onZoomIn = { zoomScale = (zoomScale * 1.25f).coerceAtMost(3f) },
                             onZoomOut = { zoomScale = (zoomScale / 1.25f).coerceAtLeast(0.5f) },
-                            onSelectPoint = { point -> selectedIndex = point }
+                            onSelectPoint = { point -> selectedIndex = point },
+                            onChartEditClick = { idx -> chartEditingIndex = idx }
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         InputSection(
-                            inputValue = inputValue,
-                            currentSeasonEntries = currentSeasonEntries,
-                            selectedNotes = selectedNotes,
-                            customTags = customTags,
-                            tagGroups = tagGroups,
-                            showInvalidScoreMsg = showInvalidScoreMsg,
-                            showTypoErrorMsg = showTypoErrorMsg,
-                            showSavedMsg = showSavedMsg,
-                            isEnglish = isEnglish,
-                            isDarkMode = isDarkMode,
-                            palette = palette,
-                            s = s,
-                            saveButtonScale = saveButtonScale.value,
+                            inputValue = inputValue, currentSeasonEntries = currentSeasonEntries, selectedNotes = selectedNotes,
+                            customTags = customTags, tagGroups = tagGroups, showInvalidScoreMsg = showInvalidScoreMsg,
+                            showTypoErrorMsg = showTypoErrorMsg, showSavedMsg = showSavedMsg, isEnglish = isEnglish,
+                            isDarkMode = isDarkMode, palette = palette, s = s, saveButtonScale = saveButtonScale.value,
                             onValueChange = { value -> inputValue = value },
                             onSave = { parsed ->
                                 val lastRank = currentSeasonEntries.lastOrNull()?.rank
                                 if (parsed > 85000) {
-                                    showInvalidScoreMsg = true
-                                    showTypoErrorMsg = false
-                                    showSavedMsg = false
+                                    showInvalidScoreMsg = true; showTypoErrorMsg = false; showSavedMsg = false
                                 } else if (lastRank != null && abs(parsed - lastRank) > 3500) {
-                                    showTypoErrorMsg = true
-                                    showInvalidScoreMsg = false
-                                    showSavedMsg = false
+                                    showTypoErrorMsg = true; showInvalidScoreMsg = false; showSavedMsg = false
                                 } else {
                                     val newEntry = RankEntry(
-                                        rank = parsed,
-                                        timestamp = System.currentTimeMillis(),
-                                        notes = selectedNotes.toList()
+                                        rank = parsed, timestamp = System.currentTimeMillis(), notes = selectedNotes.toList()
                                     )
                                     persistSeason(currentSeasonEntries + newEntry)
-                                    inputValue = ""
-                                    selectedNotes = emptySet()
-                                    showInvalidScoreMsg = false
-                                    showTypoErrorMsg = false
-                                    showSavedMsg = true
+                                    inputValue = ""; selectedNotes = emptySet(); showInvalidScoreMsg = false
+                                    showTypoErrorMsg = false; showSavedMsg = true
                                     coroutineScope.launch {
                                         saveButtonScale.snapTo(0.85f)
-                                        saveButtonScale.animateTo(
-                                            targetValue = 1f,
-                                            animationSpec = spring(
-                                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                stiffness = Spring.StiffnessMedium
-                                            )
-                                        )
+                                        saveButtonScale.animateTo(targetValue = 1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
                                     }
                                 }
                             },
@@ -680,41 +605,31 @@ fun RankTrackerApp() {
                                     customTags = updated
                                     saveCustomTags(context, updated)
                                 }
-                            }
+                            },
+                            onLongClickCustomTag = { tagToDelete = it }
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .neumorphicCard(palette, isDarkMode, 10.dp)
+                            modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 10.dp)
                                 .clickable { uriHandler.openUri("https://www.davg25.com/app/the-finals-leaderboard-tracker/") }
                                 .padding(12.dp)
                         ) {
-                            Text(
-                                text = s.top10kLabel, color = palette.cyan, fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
-                            )
+                            Text(text = s.top10kLabel, color = palette.cyan, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .neumorphicCard(palette, isDarkMode, 10.dp)
+                            modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 10.dp)
                                 .clickable { uriHandler.openUri("https://www.reachthefinals.com/patchnotes") }
                                 .padding(12.dp)
                         ) {
-                            Text(
-                                text = s.patchNotesLabel, color = palette.cyan, fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
-                            )
+                            Text(text = s.patchNotesLabel, color = palette.cyan, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // BOUTONS UNDO ET HISTORIQUE (Fixes au-dessus de la liste)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             TextButton(onClick = { showUndoConfirm = true }, enabled = currentSeasonEntries.isNotEmpty()) {
                                 Text(s.undoLast, color = Color.Red, fontSize = 13.sp)
@@ -731,174 +646,73 @@ fun RankTrackerApp() {
                             Row(modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 8.dp, baseColor = palette.surfaceAlt, accentColor = palette.red).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                 Text(s.undoConfirmMsg, color = palette.textPrimary, fontSize = 13.sp)
                                 Row {
-                                    TextButton(onClick = { persistSeason(currentSeasonEntries.dropLast(1)); showUndoConfirm = false }) {
-                                        Text(s.confirmWord, color = palette.red, fontWeight = FontWeight.SemiBold)
-                                    }
-                                    TextButton(onClick = { showUndoConfirm = false }) {
-                                        Text(s.cancelWord, color = palette.textMuted)
-                                    }
+                                    TextButton(onClick = { persistSeason(currentSeasonEntries.dropLast(1)); showUndoConfirm = false }) { Text(s.confirmWord, color = palette.red, fontWeight = FontWeight.SemiBold) }
+                                    TextButton(onClick = { showUndoConfirm = false }) { Text(s.cancelWord, color = palette.textMuted) }
                                 }
                             }
                         }
 
-                        // LISTE HISTORIQUE
                         HistoryEntriesList(
-                            currentSeasonEntries = currentSeasonEntries,
-                            showHistory = showHistory,
-                            showHistorySortMenu = showHistorySortMenu,
-                            showHistoryFilterMenu = showHistoryFilterMenu,
-                            historySortMode = historySortMode,
-                            historyNoteFilter = historyNoteFilter,
-                            editingIndex = editingIndex,
-                            editValue = editValue,
-                            editNotes = editNotes,
-                            customTags = customTags,
-                            tagGroups = tagGroups,
-                            editInvalidScore = editInvalidScore,
-                            deleteConfirmIndex = deleteConfirmIndex,
-                            expandedHistoryIndex = expandedHistoryIndex,
-                            lowRank = lowRank,
-                            peakRank = peakRank,
-                            isEnglish = isEnglish,
-                            isDarkMode = isDarkMode,
-                            palette = palette,
-                            s = s,
-                            onToggleSortMenu = {
-                                showHistorySortMenu = !showHistorySortMenu
-                                showHistoryFilterMenu = false
-                            },
-                            onToggleFilterMenu = {
-                                showHistoryFilterMenu = !showHistoryFilterMenu
-                                showHistorySortMenu = false
-                            },
-                            onSelectSortMode = { mode ->
-                                historySortMode = mode
-                                showHistorySortMenu = false
-                            },
-                            onToggleFilterNote = { tag ->
-                                val isSelected = historyNoteFilter.contains(tag)
-                                historyNoteFilter = if (isSelected) historyNoteFilter - tag else historyNoteFilter + tag
-                            },
+                            currentSeasonEntries = currentSeasonEntries, showHistory = showHistory, showHistorySortMenu = showHistorySortMenu,
+                            showHistoryFilterMenu = showHistoryFilterMenu, historySortMode = historySortMode, historyNoteFilter = historyNoteFilter,
+                            editingIndex = editingIndex, editValue = editValue, editNotes = editNotes, customTags = customTags, tagGroups = tagGroups,
+                            editInvalidScore = editInvalidScore, deleteConfirmIndex = deleteConfirmIndex, expandedHistoryIndex = expandedHistoryIndex,
+                            lowRank = lowRank, peakRank = peakRank, isEnglish = isEnglish, isDarkMode = isDarkMode, palette = palette, s = s,
+                            onToggleSortMenu = { showHistorySortMenu = !showHistorySortMenu; showHistoryFilterMenu = false },
+                            onToggleFilterMenu = { showHistoryFilterMenu = !showHistoryFilterMenu; showHistorySortMenu = false },
+                            onSelectSortMode = { mode -> historySortMode = mode; showHistorySortMenu = false },
+                            onToggleFilterNote = { tag -> val isSelected = historyNoteFilter.contains(tag); historyNoteFilter = if (isSelected) historyNoteFilter - tag else historyNoteFilter + tag },
                             onClearFilters = { historyNoteFilter = emptySet() },
-                            onStartEdit = { idx, value, tags ->
-                                editingIndex = idx
-                                editValue = value
-                                editNotes = tags
-                                editInvalidScore = false
-                            },
+                            onStartEdit = { idx, value, tags -> editingIndex = idx; editValue = value; editNotes = tags; editInvalidScore = false },
                             onEditValueChange = { value -> editValue = value },
                             onToggleEditTag = { tag ->
                                 val isSelected = editNotes.contains(tag)
-                                editNotes = if (isSelected) {
-                                    editNotes - tag
-                                } else {
-                                    val inGroup = tagGroups.find { it.contains(tag) }
-                                    if (inGroup != null) editNotes.filter { !inGroup.contains(it) }.toSet() + tag
-                                    else editNotes + tag
-                                }
+                                editNotes = if (isSelected) { editNotes - tag } else { val inGroup = tagGroups.find { it.contains(tag) }; if (inGroup != null) editNotes.filter { !inGroup.contains(it) }.toSet() + tag else editNotes + tag }
                             },
-                            onAddCustomTag = { newTag ->
-                                if (!customTags.contains(newTag)) {
-                                    val updated = customTags + newTag
-                                    customTags = updated
-                                    saveCustomTags(context, updated)
-                                }
-                            },
+                            onAddCustomTag = { newTag -> if (!customTags.contains(newTag)) { val updated = customTags + newTag; customTags = updated; saveCustomTags(context, updated) } },
+                            onLongClickCustomTag = { tagToDelete = it },
                             onSaveEdit = { idx, parsed, notes ->
                                 val next = currentSeasonEntries.toMutableList()
                                 next[idx] = next[idx].copy(rank = parsed, notes = notes.toList())
                                 persistSeason(next)
                                 editingIndex = null
                             },
-                            onCancelEdit = {
-                                editingIndex = null
-                                editInvalidScore = false
-                            },
+                            onCancelEdit = { editingIndex = null; editInvalidScore = false },
                             onStartDelete = { deleteConfirmIndex = it },
-                            onConfirmDelete = { idx ->
-                                persistSeason(currentSeasonEntries.filterIndexed { i, _ -> i != idx })
-                                deleteConfirmIndex = null
-                            },
+                            onConfirmDelete = { idx -> persistSeason(currentSeasonEntries.filterIndexed { i, _ -> i != idx }); deleteConfirmIndex = null },
                             onCancelDelete = { deleteConfirmIndex = null },
-                            onToggleExpandHistory = { idx ->
-                                expandedHistoryIndex = if (expandedHistoryIndex == idx) null else idx
-                            }
+                            onToggleExpandHistory = { idx -> expandedHistoryIndex = if (expandedHistoryIndex == idx) null else idx }
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         BottomActionsSection(
-                            currentSeasonEntries = currentSeasonEntries,
-                            showResetConfirm = showResetConfirm,
-                            exportMenuExpanded = exportMenuExpanded,
-                            importMenuExpanded = importMenuExpanded,
-                            showExportConfirm = showExportConfirm,
-                            importError = importError,
-                            showImportConfirm = showImportConfirm,
-                            pendingImport = pendingImport,
-                            showImportSuccess = showImportSuccess,
-                            palette = palette,
-                            isDarkMode = isDarkMode,
-                            s = s,
+                            currentSeasonEntries = currentSeasonEntries, showResetConfirm = showResetConfirm, exportMenuExpanded = exportMenuExpanded,
+                            importMenuExpanded = importMenuExpanded, showExportConfirm = showExportConfirm, importError = importError,
+                            showImportConfirm = showImportConfirm, pendingImport = pendingImport, showImportSuccess = showImportSuccess,
+                            palette = palette, isDarkMode = isDarkMode, s = s,
                             onToggleReset = { showResetConfirm = true },
-                            onConfirmReset = {
-                                persistSeason(emptyList())
-                                showHistory = false
-                                showResetConfirm = false
-                            },
+                            onConfirmReset = { persistSeason(emptyList()); showHistory = false; showResetConfirm = false },
                             onCancelReset = { showResetConfirm = false },
                             onExportMenuClick = { exportMenuExpanded = true },
                             onExportDismiss = { exportMenuExpanded = false },
                             onExportClipboard = {
-                                exportMenuExpanded = false
-                                clipboardManager.setText(AnnotatedString(buildExportText(allSeasons, isEnglish)))
-                                showExportConfirm = true
-                                importError = false
-                                showImportConfirm = false
-                                pendingImport = null
-                                saveLastExportTimestamp(context, System.currentTimeMillis())
-                                showExportReminder = false
+                                exportMenuExpanded = false; clipboardManager.setText(AnnotatedString(buildExportText(allSeasons, isEnglish)))
+                                showExportConfirm = true; importError = false; showImportConfirm = false; pendingImport = null
+                                saveLastExportTimestamp(context, System.currentTimeMillis()); showExportReminder = false
                             },
-                            onExportJson = {
-                                exportMenuExpanded = false
-                                exportJsonLauncher.launch("finals_rank_tracker_export.json")
-                            },
+                            onExportJson = { exportMenuExpanded = false; exportJsonLauncher.launch("finals_rank_tracker_export.json") },
                             onImportMenuClick = { importMenuExpanded = true },
                             onImportDismiss = { importMenuExpanded = false },
                             onImportClipboard = {
-                                importMenuExpanded = false
-                                val clipText = clipboardManager.getText()?.text
-                                val parsed = if (clipText != null) parseImportText(clipText) else null
+                                importMenuExpanded = false; val clipText = clipboardManager.getText()?.text; val parsed = if (clipText != null) parseImportText(clipText) else null
                                 showExportConfirm = false
-                                if (parsed != null) {
-                                    pendingImport = parsed
-                                    showImportConfirm = true
-                                    importError = false
-                                } else {
-                                    importError = true
-                                    showImportConfirm = false
-                                    pendingImport = null
-                                }
+                                if (parsed != null) { pendingImport = parsed; showImportConfirm = true; importError = false }
+                                else { importError = true; showImportConfirm = false; pendingImport = null }
                             },
-                            onImportJson = {
-                                importMenuExpanded = false
-                                importJsonLauncher.launch(arrayOf("*/*"))
-                            },
-                            onConfirmImport = {
-                                val importData = pendingImport
-                                if (importData != null) {
-                                    allSeasons = importData
-                                    saveAllSeasons(context, importData)
-                                    resetSelections()
-                                    showImportConfirm = false
-                                    pendingImport = null
-                                    showImportSuccess = true
-                                }
-                            },
-                            onCancelImport = {
-                                showImportConfirm = false
-                                pendingImport = null
-                            },
+                            onImportJson = { importMenuExpanded = false; importJsonLauncher.launch(arrayOf("*/*")) },
+                            onConfirmImport = { val importData = pendingImport; if (importData != null) { allSeasons = importData; saveAllSeasons(context, importData); resetSelections(); showImportConfirm = false; pendingImport = null; showImportSuccess = true } },
+                            onCancelImport = { showImportConfirm = false; pendingImport = null },
                             onFooterClick = { uriHandler.openUri("https://discord.gg/ZjnAMKnc") }
                         )
                     }
@@ -908,18 +722,64 @@ fun RankTrackerApp() {
             AnimatedVisibility(
                 visible = showSplash,
                 enter = fadeIn(),
-                exit = fadeOut(animationSpec = tween(200)) + scaleOut(
-                    targetScale = 0.95f, animationSpec = tween(200)
-                )
+                exit = fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.95f, animationSpec = tween(200))
             ) {
-                SplashUI(
-                    palette = palette,
-                    isEnglish = isEnglish,
-                    currentRank = currentRank,
-                    animatedRankBrush = animatedRankBrush,
-                    onDismiss = { showSplash = false }
+                SplashUI(palette = palette, isEnglish = isEnglish, currentRank = currentRank, animatedRankBrush = animatedRankBrush, onDismiss = { showSplash = false })
+            }
+
+            // --- Dialogues Globaux ---
+
+            if (tagToDelete != null) {
+                AlertDialog(
+                    onDismissRequest = { tagToDelete = null },
+                    containerColor = palette.surface,
+                    title = { Text(s.deleteTagTitle, color = palette.textPrimary) },
+                    text = { Text("${s.deleteTagDesc}\n\"$tagToDelete\"", color = palette.textMuted) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            val updated = customTags - tagToDelete!!
+                            customTags = updated
+                            saveCustomTags(context, updated)
+                            selectedNotes = selectedNotes - tagToDelete!!
+                            historyNoteFilter = historyNoteFilter - tagToDelete!!
+                            editNotes = editNotes - tagToDelete!!
+                            tagToDelete = null
+                        }) { Text(s.confirmWord, color = palette.red) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { tagToDelete = null }) { Text(s.cancelWord, color = palette.textMuted) }
+                    }
                 )
             }
+
+            if (chartEditingIndex != null) {
+                val idx = chartEditingIndex!!
+                val entryToEdit = currentSeasonEntries.getOrNull(idx)
+                if (entryToEdit != null) {
+                    ChartEditMatchDialog(
+                        idx = idx, initialRank = entryToEdit.rank.toString(), initialNotes = entryToEdit.notes.toSet(),
+                        customTags = customTags, tagGroups = tagGroups, palette = palette, s = s, isEnglish = isEnglish,
+                        onSave = { parsed, notes ->
+                            val next = currentSeasonEntries.toMutableList()
+                            next[idx] = next[idx].copy(rank = parsed, notes = notes.toList())
+                            persistSeason(next)
+                            chartEditingIndex = null
+                        },
+                        onDismiss = { chartEditingIndex = null },
+                        onAddCustomTag = { newTag ->
+                            if (!customTags.contains(newTag)) {
+                                val updated = customTags + newTag
+                                customTags = updated
+                                saveCustomTags(context, updated)
+                            }
+                        },
+                        onLongClickCustomTag = { tagToDelete = it }
+                    )
+                } else {
+                    chartEditingIndex = null
+                }
+            }
+
         }
     }
 }
@@ -927,30 +787,19 @@ fun RankTrackerApp() {
 // ---------- COMPOSANTS EXTRAITS ----------
 
 @Composable
-internal fun HeaderSection(
-    eyebrow: String, title: String, isDarkMode: Boolean, darkModeLabel: String, lightModeLabel: String, palette: Palette, onToggleDarkMode: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top
-    ) {
+internal fun HeaderSection(eyebrow: String, title: String, isDarkMode: Boolean, darkModeLabel: String, lightModeLabel: String, palette: Palette, onToggleDarkMode: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
         Column {
             Text(text = eyebrow, color = palette.accent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
             Text(text = title, color = palette.textPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
-        Text(
-            text = if (isDarkMode) darkModeLabel else lightModeLabel, color = palette.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable { onToggleDarkMode() }.padding(4.dp)
-        )
+        Text(text = if (isDarkMode) darkModeLabel else lightModeLabel, color = palette.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { onToggleDarkMode() }.padding(4.dp))
     }
 }
 
 @Composable
-internal fun SeasonLanguageSelector(
-    selectedSeason: Int, isEnglish: Boolean, seasonLabel: String, palette: Palette, onPreviousSeason: () -> Unit, onNextSeason: () -> Unit, onToggleLanguage: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
-    ) {
+internal fun SeasonLanguageSelector(selectedSeason: Int, isEnglish: Boolean, seasonLabel: String, palette: Palette, onPreviousSeason: () -> Unit, onNextSeason: () -> Unit, onToggleLanguage: (Boolean) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = "◀ ", color = if (selectedSeason > 1) palette.accent else palette.border, fontSize = 14.sp, modifier = Modifier.clickable(enabled = selectedSeason > 1) { onPreviousSeason() }.padding(6.dp))
             Text(text = "$seasonLabel $selectedSeason", color = palette.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
@@ -965,21 +814,12 @@ internal fun SeasonLanguageSelector(
 }
 
 @Composable
-internal fun CurrentRankCard(
-    currentRank: Int?, animatedRankScore: Int, animatedRankBrush: Brush, delta: Int?, deltaScale: Float, winRate: Int?, winStreak: Int, streakFlameScale: Float, flameFlicker: Float, flameGlowAlpha: Float, streakColor: Color, rsRemaining: String, nextRankPrefix: String, rubyMax: String, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings
-) {
+internal fun CurrentRankCard(currentRank: Int?, animatedRankScore: Int, animatedRankBrush: Brush, delta: Int?, deltaScale: Float, winRate: Int?, winStreak: Int, streakFlameScale: Float, flameFlicker: Float, flameGlowAlpha: Float, streakColor: Color, rsRemaining: String, nextRankPrefix: String, rubyMax: String, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings) {
     val rankName = rankNameFor(currentRank ?: 0)
-    Box(
-        modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 12.dp).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
-        ) {
+    Box(modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 12.dp).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text(
-                    text = s.currentRankLabel, color = palette.textMuted, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 1.sp, fontFamily = FontFamily.Monospace
-                )
+                Text(text = s.currentRankLabel, color = palette.textMuted, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(text = formatNum(animatedRankScore), style = TextStyle(brush = animatedRankBrush, fontSize = 45.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace))
                 if (delta != null) {
@@ -1031,16 +871,11 @@ internal fun CurrentRankCard(
 }
 
 @Composable
-internal fun RankGoalCard(
-    currentRank: Int?, selectedSeason: Int, goalValue: Int?, showGoalSelector: Boolean, estimatedMatchesToGoal: Int?, isEnglish: Boolean, palette: Palette, isDarkMode: Boolean, s: Strings, onToggleSelector: () -> Unit, onSelectGoal: (Int) -> Unit, onClearGoal: () -> Unit
-) {
+internal fun RankGoalCard(currentRank: Int?, selectedSeason: Int, goalValue: Int?, showGoalSelector: Boolean, estimatedMatchesToGoal: Int?, isEnglish: Boolean, palette: Palette, isDarkMode: Boolean, s: Strings, onToggleSelector: () -> Unit, onSelectGoal: (Int) -> Unit, onClearGoal: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 12.dp).padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 10.dp)) {
         Column {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = s.rankGoalTitle, color = palette.textMuted, fontSize = 18.sp,
-                    fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, fontFamily = FontFamily.Monospace
-                )
+                Text(text = s.rankGoalTitle, color = palette.textMuted, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, fontFamily = FontFamily.Monospace)
                 if (goalValue != null && !showGoalSelector) {
                     Row {
                         Text(text = "✎", color = palette.cyan, fontSize = 13.sp, modifier = Modifier.clickable { onToggleSelector() }.padding(4.dp))
@@ -1071,15 +906,9 @@ internal fun RankGoalCard(
                         Text(text = "${formatNum(goalValue)} RS · $goalRankName", color = palette.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                         Spacer(modifier = Modifier.height(4.dp))
                         when {
-                            currentRank != null && currentRank >= goalValue -> {
-                                Text(s.rankGoalReached, color = palette.green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            }
-                            estimatedMatchesToGoal != null -> {
-                                Text(text = "${s.rankGoalEstimatePrefix}$estimatedMatchesToGoal ${s.rankGoalEstimateSuffix} $goalRankName", color = palette.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            }
-                            else -> {
-                                Text(s.rankGoalNotEnoughData, color = palette.textMuted, fontSize = 12.sp)
-                            }
+                            currentRank != null && currentRank >= goalValue -> { Text(s.rankGoalReached, color = palette.green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                            estimatedMatchesToGoal != null -> { Text(text = "${s.rankGoalEstimatePrefix}$estimatedMatchesToGoal ${s.rankGoalEstimateSuffix} $goalRankName", color = palette.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                            else -> { Text(s.rankGoalNotEnoughData, color = palette.textMuted, fontSize = 12.sp) }
                         }
                     }
                     Spacer(modifier = Modifier.width(8.dp))
@@ -1091,9 +920,7 @@ internal fun RankGoalCard(
 }
 
 @Composable
-internal fun StatsSection(
-    currentSeasonEntries: List<RankEntry>, peakRank: Int?, peakRankName: String?, lowRank: Int?, lowRankName: String?, avgChange: Double?, avgGain: Double?, avgLoss: Double?, biggestGain: Int?, biggestDrop: Int?, bestWinStreak: Int, bestLoseStreak: Int, showStats: Boolean, compareSeasonsEnabled: Boolean, compareSeasonId: Int?, allSeasons: Map<Int, List<RankEntry>>, selectedSeason: Int, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, onToggleStats: () -> Unit, onToggleCompare: () -> Unit, onSelectCompareSeason: (Int?) -> Unit
-) {
+internal fun StatsSection(currentSeasonEntries: List<RankEntry>, peakRank: Int?, peakRankName: String?, lowRank: Int?, lowRankName: String?, avgChange: Double?, avgGain: Double?, avgLoss: Double?, biggestGain: Int?, biggestDrop: Int?, bestWinStreak: Int, bestLoseStreak: Int, showStats: Boolean, compareSeasonsEnabled: Boolean, compareSeasonId: Int?, allSeasons: Map<Int, List<RankEntry>>, selectedSeason: Int, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, onToggleStats: () -> Unit, onToggleCompare: () -> Unit, onSelectCompareSeason: (Int?) -> Unit) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             StatChip(s.best, formatNum(peakRank), palette.green, palette, Modifier.weight(1f), rankName = peakRankName, isDarkMode = isDarkMode)
@@ -1216,9 +1043,7 @@ internal fun StatsSection(
 }
 
 @Composable
-internal fun CandlestickChartSection(
-    chartPoints: List<ChartPoint>, chartPeriod: ChartPeriod, zoomScale: Float, selectedIndex: Int?, currentSeasonEntries: List<RankEntry>, lowRank: Int?, peakRank: Int?, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, onSelectPeriod: (ChartPeriod) -> Unit, onZoomIn: () -> Unit, onZoomOut: () -> Unit, onSelectPoint: (Int?) -> Unit
-) {
+internal fun CandlestickChartSection(chartPoints: List<ChartPoint>, chartPeriod: ChartPeriod, zoomScale: Float, selectedIndex: Int?, currentSeasonEntries: List<RankEntry>, lowRank: Int?, peakRank: Int?, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, onSelectPeriod: (ChartPeriod) -> Unit, onZoomIn: () -> Unit, onZoomOut: () -> Unit, onSelectPoint: (Int?) -> Unit, onChartEditClick: (Int) -> Unit) {
     if (currentSeasonEntries.isEmpty()) {
         Box(modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 12.dp).padding(24.dp)) {
             Text(text = s.emptyState, color = palette.textMuted, fontSize = 14.sp)
@@ -1258,9 +1083,12 @@ internal fun CandlestickChartSection(
                 Spacer(modifier = Modifier.height(8.dp))
                 Box(modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 10.dp, baseColor = palette.surfaceAlt, accentColor = palette.cyan).padding(12.dp)) {
                     Column {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text(text = "MATCH ${point.absoluteIndex + 1} · ${formatNum(point.rank)} RS", color = palette.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                            Text(text = "✕", color = palette.textMuted, modifier = Modifier.clickable { onSelectPoint(null) })
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "✎", color = palette.cyan, fontSize = 16.sp, modifier = Modifier.clickable { onChartEditClick(point.absoluteIndex) })
+                                Text(text = "✕", color = palette.textMuted, fontSize = 16.sp, modifier = Modifier.clickable { onSelectPoint(null) })
+                            }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(text = "${s.recordedAt} ${formatDateTime(point.timestamp, isEnglish)}", color = palette.textMuted, fontSize = 11.sp)
@@ -1288,9 +1116,7 @@ internal fun CandlestickChartSection(
 }
 
 @Composable
-internal fun InputSection(
-    inputValue: String, currentSeasonEntries: List<RankEntry>, selectedNotes: Set<String>, customTags: List<String>, tagGroups: List<List<String>>, showInvalidScoreMsg: Boolean, showTypoErrorMsg: Boolean, showSavedMsg: Boolean, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, saveButtonScale: Float, onValueChange: (String) -> Unit, onSave: (Int) -> Unit, onToggleTag: (String) -> Unit, onAddCustomTag: (String) -> Unit
-) {
+internal fun InputSection(inputValue: String, currentSeasonEntries: List<RankEntry>, selectedNotes: Set<String>, customTags: List<String>, tagGroups: List<List<String>>, showInvalidScoreMsg: Boolean, showTypoErrorMsg: Boolean, showSavedMsg: Boolean, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, saveButtonScale: Float, onValueChange: (String) -> Unit, onSave: (Int) -> Unit, onToggleTag: (String) -> Unit, onAddCustomTag: (String) -> Unit, onLongClickCustomTag: (String) -> Unit) {
     var showAddDialog by remember { mutableStateOf(false) }
     var newTagText by remember { mutableStateOf("") }
 
@@ -1309,9 +1135,7 @@ internal fun InputSection(
                 onClick = { val parsed = inputValue.toIntOrNull(); if (parsed != null) onSave(parsed) },
                 enabled = inputValue.toIntOrNull() != null,
                 modifier = Modifier.scale(saveButtonScale)
-            ) {
-                Text(if (currentSeasonEntries.isEmpty()) s.startButton else s.saveButton, fontWeight = FontWeight.SemiBold)
-            }
+            ) { Text(if (currentSeasonEntries.isEmpty()) s.startButton else s.saveButton, fontWeight = FontWeight.SemiBold) }
         }
         if (showInvalidScoreMsg) {
             Spacer(modifier = Modifier.height(6.dp))
@@ -1333,7 +1157,8 @@ internal fun InputSection(
             TagChipsSelector(
                 tags = defaultTags, selected = selectedNotes, customTags = customTags, tagGroups = tagGroups, palette = palette,
                 onToggle = { tag -> onToggleTag(tag) },
-                onAddClick = { showAddDialog = true }
+                onAddClick = { showAddDialog = true },
+                onLongClickCustomTag = onLongClickCustomTag
             )
         }
     }
@@ -1341,41 +1166,17 @@ internal fun InputSection(
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            containerColor = palette.surface,
-            titleContentColor = palette.textPrimary,
-            textContentColor = palette.textMuted,
+            containerColor = palette.surface, titleContentColor = palette.textPrimary, textContentColor = palette.textMuted,
             title = { Text(s.addTagTitle) },
-            text = {
-                OutlinedTextField(
-                    value = newTagText,
-                    onValueChange = { newTagText = it },
-                    placeholder = { Text(s.addTagPlaceholder) },
-                    singleLine = true,
-                    textStyle = TextStyle(color = palette.textPrimary)
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (newTagText.isNotBlank()) onAddCustomTag(newTagText.trim())
-                    newTagText = ""
-                    showAddDialog = false
-                }) {
-                    Text(s.addWord, color = palette.accent)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddDialog = false; newTagText = "" }) {
-                    Text(s.cancelWord, color = palette.textMuted)
-                }
-            }
+            text = { OutlinedTextField(value = newTagText, onValueChange = { newTagText = it }, placeholder = { Text(s.addTagPlaceholder) }, singleLine = true, textStyle = TextStyle(color = palette.textPrimary)) },
+            confirmButton = { TextButton(onClick = { if (newTagText.isNotBlank()) onAddCustomTag(newTagText.trim()); newTagText = ""; showAddDialog = false }) { Text(s.addWord, color = palette.accent) } },
+            dismissButton = { TextButton(onClick = { showAddDialog = false; newTagText = "" }) { Text(s.cancelWord, color = palette.textMuted) } }
         )
     }
 }
 
 @Composable
-internal fun HistoryEntriesList(
-    currentSeasonEntries: List<RankEntry>, showHistory: Boolean, showHistorySortMenu: Boolean, showHistoryFilterMenu: Boolean, historySortMode: HistorySortMode, historyNoteFilter: Set<String>, editingIndex: Int?, editValue: String, editNotes: Set<String>, customTags: List<String>, tagGroups: List<List<String>>, editInvalidScore: Boolean, deleteConfirmIndex: Int?, expandedHistoryIndex: Int?, lowRank: Int?, peakRank: Int?, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, onToggleSortMenu: () -> Unit, onToggleFilterMenu: () -> Unit, onSelectSortMode: (HistorySortMode) -> Unit, onToggleFilterNote: (String) -> Unit, onClearFilters: () -> Unit, onStartEdit: (Int, String, Set<String>) -> Unit, onEditValueChange: (String) -> Unit, onToggleEditTag: (String) -> Unit, onAddCustomTag: (String) -> Unit, onSaveEdit: (Int, Int, Set<String>) -> Unit, onCancelEdit: () -> Unit, onStartDelete: (Int) -> Unit, onConfirmDelete: (Int) -> Unit, onCancelDelete: () -> Unit, onToggleExpandHistory: (Int) -> Unit
-) {
+internal fun HistoryEntriesList(currentSeasonEntries: List<RankEntry>, showHistory: Boolean, showHistorySortMenu: Boolean, showHistoryFilterMenu: Boolean, historySortMode: HistorySortMode, historyNoteFilter: Set<String>, editingIndex: Int?, editValue: String, editNotes: Set<String>, customTags: List<String>, tagGroups: List<List<String>>, editInvalidScore: Boolean, deleteConfirmIndex: Int?, expandedHistoryIndex: Int?, lowRank: Int?, peakRank: Int?, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, onToggleSortMenu: () -> Unit, onToggleFilterMenu: () -> Unit, onSelectSortMode: (HistorySortMode) -> Unit, onToggleFilterNote: (String) -> Unit, onClearFilters: () -> Unit, onStartEdit: (Int, String, Set<String>) -> Unit, onEditValueChange: (String) -> Unit, onToggleEditTag: (String) -> Unit, onAddCustomTag: (String) -> Unit, onLongClickCustomTag: (String) -> Unit, onSaveEdit: (Int, Int, Set<String>) -> Unit, onCancelEdit: () -> Unit, onStartDelete: (Int) -> Unit, onConfirmDelete: (Int) -> Unit, onCancelDelete: () -> Unit, onToggleExpandHistory: (Int) -> Unit) {
     var showAddDialog by remember { mutableStateOf(false) }
     var newTagText by remember { mutableStateOf("") }
 
@@ -1399,11 +1200,7 @@ internal fun HistoryEntriesList(
                 Column(modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 8.dp, baseColor = palette.surfaceAlt).padding(8.dp)) {
                     val sortOptions = listOf(HistorySortMode.OLDEST_FIRST to s.sortOldestFirst, HistorySortMode.NEWEST_FIRST to s.sortNewestFirst, HistorySortMode.GAIN_ASC to s.sortGainAsc, HistorySortMode.GAIN_DESC to s.sortGainDesc)
                     sortOptions.forEach { (mode, label) ->
-                        Text(
-                            text = label, color = if (historySortMode == mode) palette.accent else palette.textPrimary,
-                            fontWeight = if (historySortMode == mode) FontWeight.Bold else FontWeight.Normal, fontSize = 12.sp,
-                            modifier = Modifier.fillMaxWidth().clickable { onSelectSortMode(mode) }.padding(vertical = 6.dp)
-                        )
+                        Text(text = label, color = if (historySortMode == mode) palette.accent else palette.textPrimary, fontWeight = if (historySortMode == mode) FontWeight.Bold else FontWeight.Normal, fontSize = 12.sp, modifier = Modifier.fillMaxWidth().clickable { onSelectSortMode(mode) }.padding(vertical = 6.dp))
                     }
                 }
             }
@@ -1411,18 +1208,10 @@ internal fun HistoryEntriesList(
                 Spacer(modifier = Modifier.height(6.dp))
                 val availableFilterNotes = currentSeasonEntries.flatMap { it.notes }.map { translateTag(it, isEnglish) }.distinct()
                 Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = s.filterAll, color = if (historyNoteFilter.isEmpty()) palette.accent else palette.textPrimary,
-                        fontWeight = if (historyNoteFilter.isEmpty()) FontWeight.Bold else FontWeight.Normal, fontSize = 11.sp,
-                        modifier = Modifier.background(if (historyNoteFilter.isEmpty()) palette.accent.copy(alpha = 0.2f) else palette.surface, RoundedCornerShape(16.dp)).border(1.dp, if (historyNoteFilter.isEmpty()) palette.accent else palette.border, RoundedCornerShape(16.dp)).clickable { onClearFilters() }.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
+                    Text(text = s.filterAll, color = if (historyNoteFilter.isEmpty()) palette.accent else palette.textPrimary, fontWeight = if (historyNoteFilter.isEmpty()) FontWeight.Bold else FontWeight.Normal, fontSize = 11.sp, modifier = Modifier.background(if (historyNoteFilter.isEmpty()) palette.accent.copy(alpha = 0.2f) else palette.surface, RoundedCornerShape(16.dp)).border(1.dp, if (historyNoteFilter.isEmpty()) palette.accent else palette.border, RoundedCornerShape(16.dp)).clickable { onClearFilters() }.padding(horizontal = 12.dp, vertical = 6.dp))
                     availableFilterNotes.forEach { tag ->
                         val isSelected = historyNoteFilter.contains(tag)
-                        Text(
-                            text = tag, color = if (isSelected) palette.accent else palette.textPrimary,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, fontSize = 11.sp,
-                            modifier = Modifier.background(if (isSelected) palette.accent.copy(alpha = 0.2f) else palette.surface, RoundedCornerShape(16.dp)).border(1.dp, if (isSelected) palette.accent else palette.border, RoundedCornerShape(16.dp)).clickable { onToggleFilterNote(tag) }.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
+                        Text(text = tag, color = if (isSelected) palette.accent else palette.textPrimary, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, fontSize = 11.sp, modifier = Modifier.background(if (isSelected) palette.accent.copy(alpha = 0.2f) else palette.surface, RoundedCornerShape(16.dp)).border(1.dp, if (isSelected) palette.accent else palette.border, RoundedCornerShape(16.dp)).clickable { onToggleFilterNote(tag) }.padding(horizontal = 12.dp, vertical = 6.dp))
                     }
                 }
             }
@@ -1461,10 +1250,7 @@ internal fun HistoryEntriesList(
                                         modifier = Modifier.weight(1f).height(52.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "✓", color = palette.green, fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.clickable { val parsed = editValue.toIntOrNull(); if (parsed != null && parsed <= 85000) onSaveEdit(idx, parsed, editNotes) }.padding(6.dp)
-                                    )
+                                    Text(text = "✓", color = palette.green, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { val parsed = editValue.toIntOrNull(); if (parsed != null && parsed <= 85000) onSaveEdit(idx, parsed, editNotes) }.padding(6.dp))
                                     Text(text = "✕", color = palette.textMuted, modifier = Modifier.clickable { onCancelEdit() }.padding(6.dp))
                                 }
                                 if (editInvalidScore) {
@@ -1476,7 +1262,8 @@ internal fun HistoryEntriesList(
                                 TagChipsSelector(
                                     tags = defaultTags, selected = editNotes, customTags = customTags, tagGroups = tagGroups, palette = palette, chipFontSize = 10.sp,
                                     onToggle = { tag -> onToggleEditTag(tag) },
-                                    onAddClick = { showAddDialog = true }
+                                    onAddClick = { showAddDialog = true },
+                                    onLongClickCustomTag = onLongClickCustomTag
                                 )
                             }
                         }
@@ -1538,41 +1325,17 @@ internal fun HistoryEntriesList(
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            containerColor = palette.surface,
-            titleContentColor = palette.textPrimary,
-            textContentColor = palette.textMuted,
+            containerColor = palette.surface, titleContentColor = palette.textPrimary, textContentColor = palette.textMuted,
             title = { Text(s.addTagTitle) },
-            text = {
-                OutlinedTextField(
-                    value = newTagText,
-                    onValueChange = { newTagText = it },
-                    placeholder = { Text(s.addTagPlaceholder) },
-                    singleLine = true,
-                    textStyle = TextStyle(color = palette.textPrimary)
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (newTagText.isNotBlank()) onAddCustomTag(newTagText.trim())
-                    newTagText = ""
-                    showAddDialog = false
-                }) {
-                    Text(s.addWord, color = palette.accent)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddDialog = false; newTagText = "" }) {
-                    Text(s.cancelWord, color = palette.textMuted)
-                }
-            }
+            text = { OutlinedTextField(value = newTagText, onValueChange = { newTagText = it }, placeholder = { Text(s.addTagPlaceholder) }, singleLine = true, textStyle = TextStyle(color = palette.textPrimary)) },
+            confirmButton = { TextButton(onClick = { if (newTagText.isNotBlank()) onAddCustomTag(newTagText.trim()); newTagText = ""; showAddDialog = false }) { Text(s.addWord, color = palette.accent) } },
+            dismissButton = { TextButton(onClick = { showAddDialog = false; newTagText = "" }) { Text(s.cancelWord, color = palette.textMuted) } }
         )
     }
 }
 
 @Composable
-internal fun BottomActionsSection(
-    currentSeasonEntries: List<RankEntry>, showResetConfirm: Boolean, exportMenuExpanded: Boolean, importMenuExpanded: Boolean, showExportConfirm: Boolean, importError: Boolean, showImportConfirm: Boolean, pendingImport: Map<Int, List<RankEntry>>?, showImportSuccess: Boolean, palette: Palette, isDarkMode: Boolean, s: Strings, onToggleReset: () -> Unit, onConfirmReset: () -> Unit, onCancelReset: () -> Unit, onExportMenuClick: () -> Unit, onExportDismiss: () -> Unit, onExportClipboard: () -> Unit, onExportJson: () -> Unit, onImportMenuClick: () -> Unit, onImportDismiss: () -> Unit, onImportClipboard: () -> Unit, onImportJson: () -> Unit, onConfirmImport: () -> Unit, onCancelImport: () -> Unit, onFooterClick: () -> Unit
-) {
+internal fun BottomActionsSection(currentSeasonEntries: List<RankEntry>, showResetConfirm: Boolean, exportMenuExpanded: Boolean, importMenuExpanded: Boolean, showExportConfirm: Boolean, importError: Boolean, showImportConfirm: Boolean, pendingImport: Map<Int, List<RankEntry>>?, showImportSuccess: Boolean, palette: Palette, isDarkMode: Boolean, s: Strings, onToggleReset: () -> Unit, onConfirmReset: () -> Unit, onCancelReset: () -> Unit, onExportMenuClick: () -> Unit, onExportDismiss: () -> Unit, onExportClipboard: () -> Unit, onExportJson: () -> Unit, onImportMenuClick: () -> Unit, onImportDismiss: () -> Unit, onImportClipboard: () -> Unit, onImportJson: () -> Unit, onConfirmImport: () -> Unit, onCancelImport: () -> Unit, onFooterClick: () -> Unit) {
     Column {
         if (currentSeasonEntries.isNotEmpty()) {
             if (!showResetConfirm) {
@@ -1671,29 +1434,41 @@ internal fun PeriodTab(label: String, selected: Boolean, palette: Palette, onCli
 }
 
 @Composable
-internal fun TagChipsSelector(tags: List<String>, selected: Set<String>, customTags: List<String>, tagGroups: List<List<String>>, palette: Palette, chipFontSize: TextUnit = 11.sp, onToggle: (String) -> Unit, onAddClick: (() -> Unit)? = null) {
+internal fun TagChipsSelector(tags: List<String>, selected: Set<String>, customTags: List<String>, tagGroups: List<List<String>>, palette: Palette, chipFontSize: TextUnit = 11.sp, onToggle: (String) -> Unit, onAddClick: (() -> Unit)? = null, onLongClickCustomTag: ((String) -> Unit)? = null) {
     val r1 = tags.take(6); val r2 = tags.drop(6)
     Column {
         Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) { r1.forEach { t -> TagChip(t, selected.contains(t), palette, chipFontSize) { onToggle(t) } } }
         Spacer(modifier = Modifier.height(6.dp))
         Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) { r2.forEach { t -> TagChip(t, selected.contains(t), palette, chipFontSize) { onToggle(t) } } }
+
         if (customTags.isNotEmpty() || onAddClick != null) {
             Spacer(modifier = Modifier.height(6.dp))
             Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                customTags.forEach { t -> TagChip(t, selected.contains(t), palette, chipFontSize) { onToggle(t) } }
+                // Le bouton + est désormais toujours à gauche
                 if (onAddClick != null) {
                     Box(modifier = Modifier.background(palette.surfaceAlt, RoundedCornerShape(16.dp)).border(1.dp, palette.border, RoundedCornerShape(16.dp)).clickable { onAddClick() }.padding(horizontal = 12.dp, vertical = 6.dp)) {
                         Text("+", color = palette.textPrimary, fontSize = chipFontSize, fontWeight = FontWeight.Bold)
                     }
                 }
+                customTags.forEach { t -> TagChip(t, selected.contains(t), palette, chipFontSize, onLongClick = { onLongClickCustomTag?.invoke(t) }) { onToggle(t) } }
             }
         }
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-internal fun TagChip(tag: String, isSelected: Boolean, palette: Palette, fontSize: TextUnit, onClick: () -> Unit) {
-    Box(modifier = Modifier.background(color = if (isSelected) palette.accent.copy(alpha = 0.2f) else palette.surface, shape = RoundedCornerShape(16.dp)).border(width = 1.dp, color = if (isSelected) palette.accent else palette.border, shape = RoundedCornerShape(16.dp)).clickable { onClick() }.padding(horizontal = 12.dp, vertical = 6.dp)) {
+internal fun TagChip(tag: String, isSelected: Boolean, palette: Palette, fontSize: TextUnit, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .background(color = if (isSelected) palette.accent.copy(alpha = 0.2f) else palette.surface, shape = RoundedCornerShape(16.dp))
+            .border(width = 1.dp, color = if (isSelected) palette.accent else palette.border, shape = RoundedCornerShape(16.dp))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
         Text(text = tag, color = if (isSelected) palette.accent else palette.textPrimary, fontSize = fontSize, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
     }
 }
@@ -1820,5 +1595,103 @@ internal fun SeasonComparisonChart(seriesA: List<RankEntry>, seriesB: List<RankE
         fun path(e: List<RankEntry>) = androidx.compose.ui.graphics.Path().apply { e.forEachIndexed { i, r -> val px = x(i); val py = y(r.rank.toFloat()); if (i == 0) moveTo(px, py) else lineTo(px, py) } }
         if (seriesA.isNotEmpty()) drawPath(path(seriesA), color = colorA, style = Stroke(width = 4f))
         if (seriesB.isNotEmpty()) drawPath(path(seriesB), color = colorB, style = Stroke(width = 4f))
+    }
+}
+
+@Composable
+internal fun ChartEditMatchDialog(
+    idx: Int, initialRank: String, initialNotes: Set<String>,
+    customTags: List<String>, tagGroups: List<List<String>>,
+    palette: Palette, s: Strings, isEnglish: Boolean,
+    onSave: (Int, Set<String>) -> Unit, onDismiss: () -> Unit,
+    onAddCustomTag: (String) -> Unit, onLongClickCustomTag: (String) -> Unit
+) {
+    var editValue by remember { mutableStateOf(initialRank) }
+    var editNotes by remember { mutableStateOf(initialNotes) }
+    var invalidScore by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var newTagText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = palette.surface,
+        title = { Text("${s.editDesc} Match ${idx + 1}", color = palette.textPrimary) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = editValue,
+                    onValueChange = { editValue = it.filter { c -> c.isDigit() } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    textStyle = TextStyle(color = palette.textPrimary)
+                )
+                if (invalidScore) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(s.invalidScoreMsg, color = palette.red, fontSize = 12.sp)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                TagChipsSelector(
+                    tags = if (isEnglish) DEFAULT_TAGS_EN else DEFAULT_TAGS_FR,
+                    selected = editNotes,
+                    customTags = customTags,
+                    tagGroups = tagGroups,
+                    palette = palette,
+                    onToggle = { tag ->
+                        val isSelected = editNotes.contains(tag)
+                        editNotes = if (isSelected) {
+                            editNotes - tag
+                        } else {
+                            val inGroup = tagGroups.find { it.contains(tag) }
+                            if (inGroup != null) editNotes.filter { !inGroup.contains(it) }.toSet() + tag
+                            else editNotes + tag
+                        }
+                    },
+                    onAddClick = { showAddDialog = true },
+                    onLongClickCustomTag = onLongClickCustomTag
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val parsed = editValue.toIntOrNull()
+                if (parsed != null && parsed <= 85000) {
+                    onSave(parsed, editNotes)
+                } else {
+                    invalidScore = true
+                }
+            }) { Text(s.saveButton, color = palette.accent) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(s.cancelWord, color = palette.textMuted) }
+        }
+    )
+
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            containerColor = palette.surface,
+            title = { Text(s.addTagTitle, color = palette.textPrimary) },
+            text = {
+                OutlinedTextField(
+                    value = newTagText,
+                    onValueChange = { newTagText = it },
+                    placeholder = { Text(s.addTagPlaceholder) },
+                    singleLine = true,
+                    textStyle = TextStyle(color = palette.textPrimary)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (newTagText.isNotBlank()) onAddCustomTag(newTagText.trim())
+                    newTagText = ""
+                    showAddDialog = false
+                }) { Text(s.addWord, color = palette.accent) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false; newTagText = "" }) {
+                    Text(s.cancelWord, color = palette.textMuted)
+                }
+            }
+        )
     }
 }

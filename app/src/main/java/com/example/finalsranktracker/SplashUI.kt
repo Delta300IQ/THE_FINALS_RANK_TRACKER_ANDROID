@@ -43,7 +43,6 @@ internal fun SplashUI(
             },
         contentAlignment = Alignment.Center
     ) {
-        // Variables d'animation
         var finalsAlpha by remember { mutableStateOf(0f) }
         var finalsScale by remember { mutableStateOf(0.8f) }
         var counterAlpha by remember { mutableStateOf(0f) }
@@ -70,10 +69,10 @@ internal fun SplashUI(
         )
         val animNameAlpha by animateFloatAsState(targetValue = nameAlpha, animationSpec = tween(400), label = "nalpha")
 
-        // Animation de la barre de progression calée EXACTEMENT sur 3000 ms = 3 secondes (durée de Splash screen)
+        // Animation de la barre calée exactement sur 2000 ms avec une vitesse constante
         val progressAnim by animateFloatAsState(
             targetValue = progressTarget,
-            animationSpec = tween(durationMillis = 3000, easing = LinearOutSlowInEasing),
+            animationSpec = tween(durationMillis = 2000, easing = LinearEasing),
             label = "Progress"
         )
 
@@ -82,24 +81,24 @@ internal fun SplashUI(
         var targetRank by remember { mutableStateOf(0) }
         val animatedSplashRank by animateIntAsState(
             targetValue = targetRank,
-            animationSpec = tween(1500, easing = FastOutSlowInEasing),
+            animationSpec = tween(1200, easing = FastOutSlowInEasing),
             label = "SplashRank"
         )
 
         LaunchedEffect(Unit) {
             finalsAlpha = 1f
             finalsScale = 1f
-            progressTarget = 1f // Déclenche le remplissage lent sur 3s
+            progressTarget = 1f // Déclenche le remplissage
 
-            delay(300)
+            delay(200)
             counterAlpha = 1f
             counterOffsetY = 0.dp
 
-            delay(300)
+            delay(200)
             logoScale = 1.0f
             logoOffsetY = 0.dp
 
-            delay(300)
+            delay(200)
             nameAlpha = 1f
         }
 
@@ -107,7 +106,7 @@ internal fun SplashUI(
             val finalValue = currentRank ?: 0
             if (finalValue > 0) {
                 val rollStartTime = System.currentTimeMillis()
-                while (System.currentTimeMillis() - rollStartTime < 800) {
+                while (System.currentTimeMillis() - rollStartTime < 600) {
                     rollValue = (1000..55000).random()
                     delay(40)
                 }
@@ -118,9 +117,9 @@ internal fun SplashUI(
             }
         }
 
-        // Fermeture automatique à 3 secondes
+        // Fermeture automatique à 2 secondes (2000 ms)
         LaunchedEffect(Unit) {
-            delay(3000)
+            delay(2000)
             onDismiss()
         }
 
