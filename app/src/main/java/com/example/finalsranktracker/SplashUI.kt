@@ -69,10 +69,10 @@ internal fun SplashUI(
         )
         val animNameAlpha by animateFloatAsState(targetValue = nameAlpha, animationSpec = tween(400), label = "nalpha")
 
-        // Animation de la barre calée exactement sur 2000 ms avec une vitesse constante
+        // Animation de la barre calée exactement sur 4000 ms avec une vitesse constante
         val progressAnim by animateFloatAsState(
             targetValue = progressTarget,
-            animationSpec = tween(durationMillis = 2000, easing = LinearEasing),
+            animationSpec = tween(durationMillis = 4000, easing = LinearEasing),
             label = "Progress"
         )
 
@@ -117,9 +117,9 @@ internal fun SplashUI(
             }
         }
 
-        // Fermeture automatique à 2 secondes (2000 ms)
+        // Fermeture automatique à 2.2 secondes (2200 ms)
         LaunchedEffect(Unit) {
-            delay(2000)
+            delay(2200)
             onDismiss()
         }
 
@@ -177,7 +177,7 @@ internal fun SplashUI(
                     Image(
                         painter = painterResource(id = rankLogoResFor(currentRank)),
                         contentDescription = rankNameFor(currentRank),
-                        modifier = Modifier.size(200.dp)
+                        modifier = Modifier.size(250.dp)
                     )
                 }
 
@@ -198,7 +198,7 @@ internal fun SplashUI(
             Box(
                 modifier = Modifier
                     .width(200.dp)
-                    .height(3.dp)
+                    .height(4.dp)
                     .background(palette.surfaceAlt, RoundedCornerShape(1.5.dp))
             ) {
                 Box(

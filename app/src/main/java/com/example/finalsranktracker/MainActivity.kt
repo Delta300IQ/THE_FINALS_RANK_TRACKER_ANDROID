@@ -816,11 +816,11 @@ internal fun SeasonLanguageSelector(selectedSeason: Int, isEnglish: Boolean, sea
 @Composable
 internal fun CurrentRankCard(currentRank: Int?, animatedRankScore: Int, animatedRankBrush: Brush, delta: Int?, deltaScale: Float, winRate: Int?, winStreak: Int, streakFlameScale: Float, flameFlicker: Float, flameGlowAlpha: Float, streakColor: Color, rsRemaining: String, nextRankPrefix: String, rubyMax: String, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings) {
     val rankName = rankNameFor(currentRank ?: 0)
-    Box(modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 12.dp).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().neumorphicCard(palette, isDarkMode, 12.dp).padding(start = 16.dp, end = 16.dp, top = 1.dp, bottom = 10.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
                 Text(text = s.currentRankLabel, color = palette.textMuted, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, fontFamily = FontFamily.Monospace)
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(1.dp))
                 Text(text = formatNum(animatedRankScore), style = TextStyle(brush = animatedRankBrush, fontSize = 45.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace))
                 if (delta != null) {
                     Spacer(modifier = Modifier.height(2.dp))
@@ -846,18 +846,18 @@ internal fun CurrentRankCard(currentRank: Int?, animatedRankScore: Int, animated
             if (currentRank != null) {
                 val progressInfo = getProgressToNextRank(currentRank)
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Image(painter = painterResource(id = rankLogoResFor(currentRank)), contentDescription = rankName, modifier = Modifier.size(130.dp).offset(y = (-5).dp))
+                    Image(painter = painterResource(id = rankLogoResFor(currentRank)), contentDescription = rankName, modifier = Modifier.size(150.dp).offset(y = (-5).dp))
                     if (progressInfo != null) {
                         val (percentage, remaining, nextName) = progressInfo
                         val localizedNextName = getLocalizedRankName(nextName, isEnglish)
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(top = 1.dp)) {
                             LinearProgressIndicator(progress = percentage / 100f, modifier = Modifier.width(100.dp).height(8.dp).clip(RoundedCornerShape(4.dp)), color = palette.accent, trackColor = palette.surfaceAlt)
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(2.dp))
                             Text(text = "$percentage%", color = palette.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                         }
                         Text(text = "${formatNum(remaining)} $rsRemaining $nextRankPrefix $localizedNextName", color = palette.textMuted, fontSize = 11.sp, letterSpacing = 1.0.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center)
                     } else {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(top = 3.dp)) {
                             LinearProgressIndicator(progress = 1f, modifier = Modifier.width(100.dp).height(8.dp).clip(RoundedCornerShape(4.dp)), color = palette.accent, trackColor = palette.surfaceAlt)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = "100%", color = palette.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
