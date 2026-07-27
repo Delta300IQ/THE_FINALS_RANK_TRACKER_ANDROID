@@ -186,6 +186,8 @@ fun RankTrackerApp() {
     var customTags by remember { mutableStateOf(loadCustomTags(context)) }
     var tagToDelete by remember { mutableStateOf<String?>(null) }
 
+    var hiddenStatsTags by remember { mutableStateOf(loadHiddenStatsTags(context)) }
+
     val coroutineScope = rememberCoroutineScope()
     val saveButtonScale = remember { Animatable(1f) }
 
@@ -531,18 +533,24 @@ fun RankTrackerApp() {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         StatsSection(
-                            currentSeasonEntries = currentSeasonEntries, peakRank = peakRank, peakRankName = peakRankName,
-                            lowRank = lowRank, lowRankName = lowRankName, avgChange = avgChange, avgGain = avgGain, avgLoss = avgLoss,
-                            biggestGain = biggestGain, biggestDrop = biggestDrop, bestWinStreak = bestWinStreak, bestLoseStreak = bestLoseStreak,
-                            showStats = showStats, compareSeasonsEnabled = compareSeasonsEnabled, compareSeasonId = compareSeasonId,
-                            allSeasons = allSeasons, selectedSeason = selectedSeason, isEnglish = isEnglish, isDarkMode = isDarkMode,
-                            palette = palette, s = s,
+                            currentSeasonEntries = currentSeasonEntries, currentRank = currentRank, animatedRankBrush = animatedRankBrush,
+                            peakRank = peakRank, peakRankName = peakRankName, lowRank = lowRank, lowRankName = lowRankName,
+                            avgChange = avgChange, avgGain = avgGain, avgLoss = avgLoss, biggestGain = biggestGain, biggestDrop = biggestDrop,
+                            bestWinStreak = bestWinStreak, bestLoseStreak = bestLoseStreak, showStats = showStats,
+                            compareSeasonsEnabled = compareSeasonsEnabled, compareSeasonId = compareSeasonId, allSeasons = allSeasons,
+                            selectedSeason = selectedSeason, isEnglish = isEnglish, isDarkMode = isDarkMode, palette = palette, s = s,
+                            hiddenStatsTags = hiddenStatsTags,
                             onToggleStats = { showStats = !showStats },
                             onToggleCompare = {
                                 compareSeasonsEnabled = !compareSeasonsEnabled
                                 if (!compareSeasonsEnabled) compareSeasonId = null
                             },
-                            onSelectCompareSeason = { season -> compareSeasonId = season }
+                            onSelectCompareSeason = { season -> compareSeasonId = season },
+                            onToggleHideTag = { tag ->
+                                val updated = if (hiddenStatsTags.contains(tag)) hiddenStatsTags - tag else hiddenStatsTags + tag
+                                hiddenStatsTags = updated
+                                saveHiddenStatsTags(context, updated)
+                            }
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -920,10 +928,13 @@ internal fun RankGoalCard(currentRank: Int?, selectedSeason: Int, goalValue: Int
 }
 
 @Composable
-internal fun StatsSection(currentSeasonEntries: List<RankEntry>, peakRank: Int?, peakRankName: String?, lowRank: Int?, lowRankName: String?, avgChange: Double?, avgGain: Double?, avgLoss: Double?, biggestGain: Int?, biggestDrop: Int?, bestWinStreak: Int, bestLoseStreak: Int, showStats: Boolean, compareSeasonsEnabled: Boolean, compareSeasonId: Int?, allSeasons: Map<Int, List<RankEntry>>, selectedSeason: Int, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, onToggleStats: () -> Unit, onToggleCompare: () -> Unit, onSelectCompareSeason: (Int?) -> Unit) {
+internal fun StatsSection(currentSeasonEntries: List<RankEntry>, currentRank: Int?, animatedRankBrush: Brush, peakRank: Int?, peakRankName: String?, lowRank: Int?, lowRankName: String?, avgChange: Double?, avgGain: Double?, avgLoss: Double?, biggestGain: Int?, biggestDrop: Int?, bestWinStreak: Int, bestLoseStreak: Int, showStats: Boolean, compareSeasonsEnabled: Boolean, compareSeasonId: Int?, allSeasons: Map<Int, List<RankEntry>>, selectedSeason: Int, isEnglish: Boolean, isDarkMode: Boolean, palette: Palette, s: Strings, hiddenStatsTags: Set<String>, onToggleStats: () -> Unit, onToggleCompare: () -> Unit, onSelectCompareSeason: (Int?) -> Unit, onToggleHideTag: (String) -> Unit) {
+    var isEditingTags by remember { mutableStateOf(false) }
+
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatChip(s.best, formatNum(peakRank), palette.green, palette, Modifier.weight(1f), rankName = peakRankName, isDarkMode = isDarkMode)
+            val isPeak = currentRank != null && peakRank != null && currentRank == peakRank
+            StatChip(s.best, formatNum(peakRank), palette.green, palette, Modifier.weight(1f), rankName = peakRankName, isDarkMode = isDarkMode, valueBrush = if (isPeak) animatedRankBrush else null)
             StatChip(s.worst, formatNum(lowRank), palette.red, palette, Modifier.weight(1f), rankName = lowRankName, isDarkMode = isDarkMode)
             StatChip(s.matches, currentSeasonEntries.size.toString(), palette.cyan, palette, Modifier.weight(1f), isDarkMode = isDarkMode)
         }
@@ -986,15 +997,40 @@ internal fun StatsSection(currentSeasonEntries: List<RankEntry>, peakRank: Int?,
                 if (tagStats.isNotEmpty()) {
                     val tagMatchCounts = countMatchesByTag(currentSeasonEntries, isEnglish)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = s.avgStatsByTag, color = palette.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = s.avgStatsByTag, color = palette.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "✎",
+                            color = palette.cyan,
+                            fontSize = 14.sp,
+                            modifier = Modifier.clickable { isEditingTags = !isEditingTags }.padding(4.dp)
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(6.dp))
-                    tagStats.entries.sortedByDescending { (_, pair) -> (pair.first ?: 0.0) + (pair.second ?: 0.0) }.forEach { (tag, pair) ->
-                        val (avgG, avgL) = pair; val count = tagMatchCounts[tag] ?: 0
-                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(text = " • $tag ($count)", color = palette.textMuted, fontSize = 11.sp)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                    val sortedTagStats = tagStats.entries.sortedByDescending { (_, pair) -> (pair.first ?: 0.0) + (pair.second ?: 0.0) }
+                    sortedTagStats.forEach { (tag, pair) ->
+                        val isHidden = hiddenStatsTags.contains(tag)
+                        if (isHidden && !isEditingTags) return@forEach
+
+                        val (avgG, avgL) = pair
+                        val count = tagMatchCounts[tag] ?: 0
+                        Row(modifier = Modifier.fillMaxWidth().alpha(if (isHidden) 0.5f else 1f).padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = " • $tag ($count)", color = palette.textMuted, fontSize = 11.sp, modifier = Modifier.weight(1f))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 if (avgG != null) { Text(text = "+${avgG.roundToInt()}", color = palette.green, fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
                                 if (avgL != null) { Text(text = "${avgL.roundToInt()}", color = palette.red, fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
+                                if (isEditingTags) {
+                                    Text(
+                                        text = if (isHidden) s.showWord else s.hideWord,
+                                        color = palette.textMuted.copy(alpha = 0.5f),
+                                        fontSize = 9.sp,
+                                        modifier = Modifier.clickable { onToggleHideTag(tag) }.padding(horizontal = 4.dp, vertical = 2.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -1096,8 +1132,8 @@ internal fun CandlestickChartSection(chartPoints: List<ChartPoint>, chartPeriod:
                         if (correspondingEntry != null && correspondingEntry.notes.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(6.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                                correspondingEntry.notes.forEach { rawTag ->
-                                    val tag = translateTag(rawTag, isEnglish)
+                                val sortedTags = correspondingEntry.notes.map { translateTag(it, isEnglish) }.sortedWith(TAG_COMPARATOR)
+                                sortedTags.forEach { tag ->
                                     Text(text = tag, color = palette.accent, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.neumorphicCard(palette, isDarkMode, 6.dp, baseColor = palette.surface, accentColor = palette.accent.copy(alpha = 0.6f)).padding(horizontal = 6.dp, vertical = 2.dp))
                                 }
                             }
@@ -1297,7 +1333,8 @@ internal fun HistoryEntriesList(currentSeasonEntries: List<RankEntry>, showHisto
                                 if (entry.notes.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(start = 8.dp).horizontalScroll(rememberScrollState())) {
-                                        entry.notes.forEach { rawTag -> val tag = translateTag(rawTag, isEnglish); Text(text = tag, color = palette.textMuted, fontSize = 9.sp, modifier = Modifier.background(palette.surfaceAlt, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp)) }
+                                        val sortedTags = entry.notes.map { translateTag(it, isEnglish) }.sortedWith(TAG_COMPARATOR)
+                                        sortedTags.forEach { tag -> Text(text = tag, color = palette.textMuted, fontSize = 9.sp, modifier = Modifier.background(palette.surfaceAlt, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp)) }
                                     }
                                 }
                                 if (isExpanded) {
@@ -1403,12 +1440,16 @@ internal fun BottomActionsSection(currentSeasonEntries: List<RankEntry>, showRes
 // ---------- COMPOSANTS GRAPHIQUES DE BASE ----------
 
 @Composable
-internal fun StatChip(label: String, value: String, valueColor: Color, palette: Palette, modifier: Modifier = Modifier, rankName: String? = null, isDarkMode: Boolean = true) {
+internal fun StatChip(label: String, value: String, valueColor: Color, palette: Palette, modifier: Modifier = Modifier, rankName: String? = null, isDarkMode: Boolean = true, valueBrush: Brush? = null) {
     Column(modifier = modifier.neumorphicCard(palette, isDarkMode, 8.dp).padding(vertical = 8.dp, horizontal = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, color = palette.textMuted, fontSize = 13.sp, letterSpacing = 0.5.sp, fontFamily = FontFamily.Monospace, lineHeight = 13.sp)
         if (rankName != null) Text(rankName, color = palette.textMuted, fontSize = 13.sp, letterSpacing = 0.5.sp, fontFamily = FontFamily.Monospace, lineHeight = 13.sp)
         Spacer(modifier = Modifier.height(0.5.dp))
-        Text(value, color = valueColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
+        if (valueBrush != null) {
+            Text(value, style = TextStyle(brush = valueBrush, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace))
+        } else {
+            Text(value, color = valueColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
+        }
     }
 }
 
@@ -1444,7 +1485,6 @@ internal fun TagChipsSelector(tags: List<String>, selected: Set<String>, customT
         if (customTags.isNotEmpty() || onAddClick != null) {
             Spacer(modifier = Modifier.height(6.dp))
             Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                // Le bouton + est désormais toujours à gauche
                 if (onAddClick != null) {
                     Box(modifier = Modifier.background(palette.surfaceAlt, RoundedCornerShape(16.dp)).border(1.dp, palette.border, RoundedCornerShape(16.dp)).clickable { onAddClick() }.padding(horizontal = 12.dp, vertical = 6.dp)) {
                         Text("+", color = palette.textPrimary, fontSize = chipFontSize, fontWeight = FontWeight.Bold)

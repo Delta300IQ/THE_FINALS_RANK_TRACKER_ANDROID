@@ -69,7 +69,6 @@ internal fun SplashUI(
         )
         val animNameAlpha by animateFloatAsState(targetValue = nameAlpha, animationSpec = tween(400), label = "nalpha")
 
-        // Animation de la barre calée exactement sur 4000 ms avec une vitesse constante
         val progressAnim by animateFloatAsState(
             targetValue = progressTarget,
             animationSpec = tween(durationMillis = 4000, easing = LinearEasing),
@@ -88,7 +87,7 @@ internal fun SplashUI(
         LaunchedEffect(Unit) {
             finalsAlpha = 1f
             finalsScale = 1f
-            progressTarget = 1f // Déclenche le remplissage
+            progressTarget = 1f
 
             delay(200)
             counterAlpha = 1f
@@ -117,7 +116,6 @@ internal fun SplashUI(
             }
         }
 
-        // Fermeture automatique à 2.2 secondes (2200 ms)
         LaunchedEffect(Unit) {
             delay(2200)
             onDismiss()
@@ -194,7 +192,6 @@ internal fun SplashUI(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Barre de chargement
             Box(
                 modifier = Modifier
                     .width(200.dp)

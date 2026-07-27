@@ -66,7 +66,8 @@ internal data class Strings(
     val compareSeasonsPrompt: String, val compareSeasonsNoOthers: String, val performanceByTimeTitle: String,
     val dayOfWeekLabel: String, val timeOfDayLabel: String, val exportReminderMessage: String, val exportReminderDismiss: String,
     val addTagTitle: String, val addTagPlaceholder: String, val addWord: String,
-    val deleteTagTitle: String, val deleteTagDesc: String
+    val deleteTagTitle: String, val deleteTagDesc: String,
+    val showHiddenTags: String, val hideHiddenTags: String, val hideWord: String, val showWord: String
 )
 
 internal val FR = Strings(
@@ -106,7 +107,8 @@ internal val FR = Strings(
     dayOfWeekLabel = "Par jour de la semaine", timeOfDayLabel = "Par moment de la journée",
     exportReminderMessage = "Pensez à sauvegarder vos données !", exportReminderDismiss = "Plus tard",
     addTagTitle = "Nouveau tag", addTagPlaceholder = "Nom du tag", addWord = "Ajouter",
-    deleteTagTitle = "Supprimer le tag", deleteTagDesc = "Voulez-vous supprimer ce tag personnalisé ?"
+    deleteTagTitle = "Supprimer le tag", deleteTagDesc = "Voulez-vous supprimer ce tag personnalisé ?",
+    showHiddenTags = "Afficher les tags masqués", hideHiddenTags = "Cacher les tags masqués", hideWord = "Masquer", showWord = "Afficher"
 )
 
 internal val EN = Strings(
@@ -146,7 +148,8 @@ internal val EN = Strings(
     dayOfWeekLabel = "By day of week", timeOfDayLabel = "By time of day",
     exportReminderMessage = "Remember to back up your data!", exportReminderDismiss = "Later",
     addTagTitle = "New tag", addTagPlaceholder = "Tag name", addWord = "Add",
-    deleteTagTitle = "Delete tag", deleteTagDesc = "Do you want to delete this custom tag?"
+    deleteTagTitle = "Delete tag", deleteTagDesc = "Do you want to delete this custom tag?",
+    showHiddenTags = "Show hidden tags", hideHiddenTags = "Hide hidden tags", hideWord = "Hide", showWord = "Show"
 )
 
 @Keep
@@ -185,6 +188,26 @@ internal val TAG_GROUPS_EN = listOf(
     listOf("Unlucky", "Lucky"),
     listOf("I played poorly", "I played well")
 )
+
+// Comparateur pour trier les tags selon les priorités requises
+internal val TAG_COMPARATOR = Comparator<String> { a, b ->
+    val queueTags = listOf("SoloQ", "DuoQ", "Trio")
+    val seedTags = listOf("Seed 1/2", "Seed 3/5", "Seed 6/8")
+
+    val aQueue = queueTags.indexOf(a)
+    val bQueue = queueTags.indexOf(b)
+    if (aQueue != -1 && bQueue == -1) return@Comparator -1
+    if (aQueue == -1 && bQueue != -1) return@Comparator 1
+    if (aQueue != -1 && bQueue != -1) return@Comparator aQueue.compareTo(bQueue)
+
+    val aSeed = seedTags.indexOf(a)
+    val bSeed = seedTags.indexOf(b)
+    if (aSeed != -1 && bSeed == -1) return@Comparator -1
+    if (aSeed == -1 && bSeed != -1) return@Comparator 1
+    if (aSeed != -1 && bSeed != -1) return@Comparator aSeed.compareTo(bSeed)
+
+    a.compareTo(b, ignoreCase = true)
+}
 
 internal fun getTagGroups(isEnglish: Boolean) = if (isEnglish) TAG_GROUPS_EN else TAG_GROUPS_FR
 
@@ -430,6 +453,7 @@ internal const val KEY_LANGUAGE = "is_english"
 internal const val KEY_SELECTED_SEASON = "selected_season"
 internal const val KEY_RANK_GOALS = "rank_goals_v1"
 internal const val KEY_CUSTOM_TAGS = "custom_tags"
+internal const val KEY_HIDDEN_STATS_TAGS = "hidden_stats_tags"
 internal const val KEY_LAST_EXPORT_TIMESTAMP = "last_export_timestamp"
 internal const val KEY_EXPORT_REMINDER_DISMISS_TIMESTAMP = "export_reminder_dismiss_timestamp"
 internal const val EXPORT_REMINDER_INTERVAL_MS = 14L * 24 * 3600 * 1000
@@ -448,6 +472,16 @@ internal fun saveCustomTags(context: Context, tags: List<String>) {
     val arr = JSONArray()
     tags.forEach { arr.put(it) }
     prefs.edit().putString(KEY_CUSTOM_TAGS, arr.toString()).apply()
+}
+
+internal fun loadHiddenStatsTags(context: Context): Set<String> {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return prefs.getStringSet(KEY_HIDDEN_STATS_TAGS, emptySet()) ?: emptySet()
+}
+
+internal fun saveHiddenStatsTags(context: Context, tags: Set<String>) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putStringSet(KEY_HIDDEN_STATS_TAGS, tags).apply()
 }
 
 internal fun loadAllSeasons(context: Context): Map<Int, List<RankEntry>> {
