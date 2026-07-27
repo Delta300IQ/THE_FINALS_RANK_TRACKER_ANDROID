@@ -25,10 +25,11 @@ Discord:  delta8771
 
 
 
-<img width="260" height="600" alt="Screenshot_2026-07-26-23-46-44-057_com example finalsranktracker" src="https://github.com/user-attachments/assets/bacb8303-f445-404a-b8fc-516ff90d4179" />
-<img width="260" height="600" alt="Screenshot_2026-07-26-23-47-03-523_com example finalsranktracker" src="https://github.com/user-attachments/assets/4f44481d-e31c-42e5-8e5d-07fcc5ec5a68" />
-<img width="260" height="600" alt="Screenshot_2026-07-26-23-47-49-935_com example finalsranktracker" src="https://github.com/user-attachments/assets/a10eaa2d-440f-4183-8927-69ecdca3ea3e" />
-<img width="260" height="600" alt="Screenshot_2026-07-26-23-49-12-831_com example finalsranktracker" src="https://github.com/user-attachments/assets/8c417ca7-8615-4661-bd3b-cd1833258e4b" />
 
+<img width="260" height="600" alt="Screenshot_2026-07-28-00-31-21-891_com example finalsranktracker" src="https://github.com/user-attachments/assets/2de3636b-4a27-466d-a24b-05a604cd4b29" />
 
+<img width="260" height="600" alt="Screenshot_2026-07-28-00-31-54-315_com example finalsranktracker" src="https://github.com/user-attachments/assets/16a566ca-0281-4184-8f6f-6fde9ab8c09c" />
 
+<img width="260" height="600" alt="Screenshot_2026-07-28-00-32-23-272_com example finalsranktracker" src="https://github.com/user-attachments/assets/f7bb2c65-ff18-4a8c-90b1-1215c6353a94" />
+
+<img width="260" height="600" alt="Screenshot_2026-07-28-00-33-01-332_com example finalsranktracker" src="https://github.com/user-attachments/assets/e271e039-f0ee-4327-bae9-f8e001ac6093" />
