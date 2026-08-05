@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
 
 @Composable
@@ -34,7 +36,7 @@ internal fun SplashUI(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(palette.bg)
+            .background(Brush.radialGradient(colors = listOf(Color(0xFF9FB6CD), Color(0xFF606979)), radius = 1200f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -45,17 +47,62 @@ internal fun SplashUI(
     ) {
         var finalsAlpha by remember { mutableStateOf(0f) }
         var finalsScale by remember { mutableStateOf(0.8f) }
-        var counterAlpha by remember { mutableStateOf(0f) }
-        var counterOffsetY by remember { mutableStateOf(40.dp) }
         var logoScale by remember { mutableStateOf(0f) }
-        var nameAlpha by remember { mutableStateOf(0f) }
         var logoOffsetY by remember { mutableStateOf((-100).dp) }
         var progressTarget by remember { mutableStateOf(0f) }
 
+        val context = LocalContext.current
+        val selectedMascot = remember {
+            val possibleNames = listOf(
+                "namatama_splash",
+                "namatama_38",
+                "namatama_36",
+                "namatama_35",
+                "namatama_39",
+                "namatama_41",
+                "namatama_28",
+                "namatama_26",
+                "namatama_22",
+                "namatama_18",
+                "namatama_12",
+                "namatama_11",
+                "namatama_10",
+                "namatama_9",
+                "namatama_7",
+                "namatama_3",
+                "namatama_29",
+                "namatama_19",
+                "namatama_14",
+                "namatama_24"
+            )
+            
+            val prefs = context.getSharedPreferences("mascot_prefs", android.content.Context.MODE_PRIVATE)
+            val historyString = prefs.getString("history", "") ?: ""
+            val history = historyString.split(",").filter { it.isNotEmpty() }.mapNotNull { it.toIntOrNull() }
+
+            val existingDrawables = possibleNames.map { name ->
+                context.resources.getIdentifier(name, "drawable", context.packageName)
+            }.filter { it != 0 }
+
+            if (existingDrawables.isNotEmpty()) {
+                var available = existingDrawables.filter { !history.contains(it) }
+                if (available.isEmpty()) {
+                    available = existingDrawables
+                }
+                
+                val chosen = available.random()
+                
+                val newHistory = (history + chosen).takeLast(5)
+                prefs.edit().putString("history", newHistory.joinToString(",")).apply()
+                
+                chosen
+            } else {
+                R.drawable.namatama_splash
+            }
+        }
+
         val animFinalsAlpha by animateFloatAsState(targetValue = finalsAlpha, animationSpec = tween(400), label = "alpha")
         val animFinalsScale by animateFloatAsState(targetValue = finalsScale, animationSpec = tween(400, easing = FastOutSlowInEasing), label = "scale")
-        val animCounterAlpha by animateFloatAsState(targetValue = counterAlpha, animationSpec = tween(400), label = "calpha")
-        val animCounterOffsetY by animateDpAsState(targetValue = counterOffsetY, animationSpec = tween(400, easing = FastOutSlowInEasing), label = "cy")
 
         val animLogoScale by animateFloatAsState(
             targetValue = logoScale,
@@ -67,7 +114,6 @@ internal fun SplashUI(
             animationSpec = spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessMediumLow),
             label = "ly"
         )
-        val animNameAlpha by animateFloatAsState(targetValue = nameAlpha, animationSpec = tween(400), label = "nalpha")
 
         val progressAnim by animateFloatAsState(
             targetValue = progressTarget,
@@ -75,53 +121,20 @@ internal fun SplashUI(
             label = "Progress"
         )
 
-        var isRolling by remember { mutableStateOf(true) }
-        var rollValue by remember { mutableStateOf(0) }
-        var targetRank by remember { mutableStateOf(0) }
-        val animatedSplashRank by animateIntAsState(
-            targetValue = targetRank,
-            animationSpec = tween(1200, easing = FastOutSlowInEasing),
-            label = "SplashRank"
-        )
-
         LaunchedEffect(Unit) {
             finalsAlpha = 1f
             finalsScale = 1f
             progressTarget = 1f
 
-            delay(200)
-            counterAlpha = 1f
-            counterOffsetY = 0.dp
-
-            delay(200)
+            delay(300)
             logoScale = 1.0f
             logoOffsetY = 0.dp
-
-            delay(200)
-            nameAlpha = 1f
-        }
-
-        LaunchedEffect(Unit) {
-            val finalValue = currentRank ?: 0
-            if (finalValue > 0) {
-                val rollStartTime = System.currentTimeMillis()
-                while (System.currentTimeMillis() - rollStartTime < 600) {
-                    rollValue = (1000..55000).random()
-                    delay(40)
-                }
-                isRolling = false
-                targetRank = finalValue
-            } else {
-                isRolling = false
-            }
         }
 
         LaunchedEffect(Unit) {
             delay(2200)
             onDismiss()
         }
-
-        val displayValue = if (isRolling) rollValue else animatedSplashRank
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -132,7 +145,7 @@ internal fun SplashUI(
         ) {
             Text(
                 text = "THE FINALS",
-                color = palette.accent,
+                color = Color.White,
                 style = TextStyle(
                     fontSize = 72.sp,
                     fontWeight = FontWeight.Black,
@@ -145,52 +158,21 @@ internal fun SplashUI(
                     .scale(animFinalsScale)
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+            Box(
                 modifier = Modifier
-                    .alpha(animCounterAlpha)
-                    .offset(y = animCounterOffsetY)
+                    .scale(animLogoScale)
+                    .offset(y = animLogoOffsetY)
             ) {
-                Text(
-                    text = formatNum(displayValue),
-                    style = TextStyle(
-                        brush = animatedRankBrush,
-                        fontSize = 80.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    )
+                Image(
+                    painter = painterResource(id = selectedMascot),
+                    contentDescription = "Splash Logo",
+                    modifier = Modifier.size(380.dp)
                 )
             }
 
-            if (currentRank != null) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Box(
-                    modifier = Modifier
-                        .scale(animLogoScale)
-                        .offset(y = animLogoOffsetY)
-                ) {
-                    Image(
-                        painter = painterResource(id = rankLogoResFor(currentRank)),
-                        contentDescription = rankNameFor(currentRank),
-                        modifier = Modifier.size(250.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = getLocalizedRankName(rankNameFor(currentRank), isEnglish),
-                    color = palette.cyan,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.alpha(animNameAlpha)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
             Box(
                 modifier = Modifier
