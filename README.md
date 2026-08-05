@@ -17,7 +17,7 @@ All your data stays locally on your phone, no account needed, no ads, and no tra
 - **Import / Export** — Backup and restore your database via JSON file.
 - **In-App Update Checker** — Get notified when a new version is released on GitHub.
 
-#HOW TO INSTALL
+# HOW TO INSTALL
 Go on the release page, click on latest, then download the .apk file named "THE_FINALS_STATS_x.x.x.apk". Now click on the file you just downloaded and it should prompt to install, it will probably safe it's note safe because it's not official, but no worry you can do it anyway. And you should be good to go, if you encounter any issues reach out on discord: delta8771.
 
 Keep in mind that this is a personal project, but feedback and suggestions are always welcome! Feel free to open an issue or reach out.
