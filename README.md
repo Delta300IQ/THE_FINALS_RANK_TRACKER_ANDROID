@@ -21,3 +21,17 @@ Keep in mind that this is a personal project, but feedback and suggestions are a
 Made with ❤️ by Delta300IQ, see you in the arena !
 
 Discord: delta8771
+
+
+
+<img width="1080" height="2400" alt="Screenshot_2026-08-05-14-38-53-215_com example finalsranktracker" src="https://github.com/user-attachments/assets/19248029-436b-413d-8c6d-b0998bd03c5a" />
+
+<img width="1080" height="2400" alt="Screenshot_2026-08-05-14-39-06-396_com example finalsranktracker" src="https://github.com/user-attachments/assets/a397511d-2cdd-4ad4-8116-0db2a453fcf8" />
+
+<img width="1080" height="2400" alt="Screenshot_2026-08-05-14-39-25-820_com example finalsranktracker" src="https://github.com/user-attachments/assets/bf7a0250-1601-47ca-b82e-54a673d0d5cc" />
+
+<img width="1080" height="2400" alt="Screenshot_2026-08-05-14-39-30-137_com example finalsranktracker" src="https://github.com/user-attachments/assets/93fe64f2-209e-4dcd-9fef-11612187156d" />
+
+<img width="1080" height="2400" alt="Screenshot_2026-08-05-14-39-36-538_com example finalsranktracker" src="https://github.com/user-attachments/assets/7ba9e1e8-1944-4b64-a7bf-d686a151ae57" />
+
+<img width="1080" height="2400" alt="Screenshot_2026-08-05-14-39-48-637_com example finalsranktracker" src="https://github.com/user-attachments/assets/4b7a9a3a-d33a-4819-acc2-99c5203ccb2b" />
