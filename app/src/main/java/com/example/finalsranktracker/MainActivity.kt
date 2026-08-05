@@ -825,6 +825,43 @@ fun RankTrackerApp() {
                         }
 
                         Spacer(modifier = Modifier.height(30.dp))
+
+                        val updateScope = rememberCoroutineScope()
+                        var isCheckingUpdate by remember { mutableStateOf(false) }
+                        var showUpToDateMsg by remember { mutableStateOf(false) }
+                        
+                        SettingsRow(palette, clickable = {
+                            if (!isCheckingUpdate) {
+                                isCheckingUpdate = true
+                                updateScope.launch(Dispatchers.IO) {
+                                    val latestVer = checkGithubUpdate(context)
+                                    kotlinx.coroutines.withContext(Dispatchers.Main) {
+                                        if (latestVer != null) {
+                                            updateAvailableUrl = "https://github.com/Delta300IQ/THE_FINALS_RANK_TRACKER_ANDROID/releases"
+                                        } else {
+                                            showUpToDateMsg = true
+                                        }
+                                        isCheckingUpdate = false
+                                    }
+                                    if (latestVer == null) {
+                                        delay(3000)
+                                        showUpToDateMsg = false
+                                    }
+                                }
+                            }
+                        }) {
+                            Text(
+                                if (isCheckingUpdate) (if (isEnglish) "Checking..." else "Vérification...")
+                                else if (showUpToDateMsg) (if (isEnglish) "App is up to date" else "Application à jour")
+                                else (if (isEnglish) "Check for updates" else "Vérifier les mises à jour"),
+                                color = if (showUpToDateMsg) palette.green else Color.White,
+                                fontFamily = BarlowCondensed,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(30.dp))
                         SettingsRow(palette, clickable = { showDisclaimer = true }) {
                             Text(s.disclaimerTitle, color = Color.White, fontFamily = BarlowCondensed, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }

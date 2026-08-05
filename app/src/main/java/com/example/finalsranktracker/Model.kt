@@ -24,7 +24,7 @@ internal enum class ChartType { CANDLESTICK, STRAIGHT_LINE, CURVED_LINE }
 internal enum class HistorySortMode { OLDEST_FIRST, NEWEST_FIRST, GAIN_ASC, GAIN_DESC }
 internal enum class ChartPeriod { WEEK, MONTH, ALL }
 
-internal const val APP_VERSION = "1.0.0"
+internal const val APP_VERSION = "2.0.0"
 
 internal data class Palette(
     val bg: Color, val surface: Color, val surfaceAlt: Color, val border: Color,
